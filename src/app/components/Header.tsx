@@ -4,22 +4,30 @@ import Link from "next/link";
 
 const HeaderDiv = styled.div`
   width: 100%;
-  height: 100px;
+  height: 12%;
 
   display: flex;
-  align-items: center;
+  flex-direction: column;
+`;
+
+const HeaderContainer = styled.div`
+  display: flex;
+
+  margin-left: 20px;
 `;
 
 const HeaderNav = styled.nav`
   display: flex;
+  align-items: center;
 
-  margin-left: 10px;
+  margin-left: 40px;
 `;
 
 const Element = styled(Link)`
-  margin-left: 30px;
+  margin-left: 50px;
 
   color: black;
+  font-size: 13pt;
   text-decoration: none;
 `;
 
@@ -28,22 +36,34 @@ const Title = styled.h1`
 `;
 
 const TitleElement = styled(Link)`
+  height: auto;
+
   color: black;
   text-decoration: none;
+`;
+
+const HorizontalLine = styled.div`
+  background-color: black;
+  width: 100%;
+  height: 1px;
 `;
 
 const Header = () => {
   return (
     <HeaderDiv>
-      <TitleElement href="/">
-        <Title>토도리</Title>
-      </TitleElement>
+      <HeaderContainer>
+        <TitleElement href="/">
+          <Title>토도리</Title>
+        </TitleElement>
 
-      <HeaderNav>
-        <Element href="/plan">계획</Element>
-        <Element href="/project">프로젝트</Element>
-        <Element href="/setting">설정</Element>
-      </HeaderNav>
+        <HeaderNav>
+          <Element href="/plan">계획</Element>
+          <Element href="/project">프로젝트</Element>
+          <Element href="/setting">설정</Element>
+        </HeaderNav>
+      </HeaderContainer>
+
+      <HorizontalLine />
     </HeaderDiv>
   );
 };
