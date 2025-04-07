@@ -41,9 +41,9 @@ const DetailHeader = styled.div`
   margin: 30px;
 `;
 
-const DetailChecked = styled.button<{ completed: boolean }>`
+const DetailChecked = styled.button<{ completed: string }>`
   background-color: ${({ completed }) =>
-    completed ? "black" : "rgba(0, 0, 0, 0)"};
+    completed === "true" ? "black" : "rgba(0, 0, 0, 0)"};
 
   border: 1px solid black;
   border-radius: 5px;
@@ -116,6 +116,8 @@ const DescriptionLine = styled.div`
 `;
 
 const Description = styled.p`
+  display: flex;
+
   font-size: 18pt;
 
   margin-right: 10px;
@@ -156,17 +158,17 @@ const LineContainer = styled.div`
   margin-left: 20px;
 `;
 
-const DifficultyVerticalLine = styled.div<{ match: boolean }>`
-  background-color: ${({ match }) => (match ? "white" : "black")};
+const DifficultyVerticalLine = styled.div<{ match: string }>`
+  background-color: ${({ match }) => (match === "true" ? "white" : "black")};
 
-  width: ${({ match }) => (match ? "30px" : "1px")};
+  width: ${({ match }) => (match === "true" ? "30px" : "1px")};
   height: 30px;
 
-  border: ${({ match }) => (match ? "1px solid black" : "none")};
+  border: ${({ match }) => (match === "true" ? "1px solid black" : "none")};
   border-radius: 50px;
 
-  margin-left: ${({ match }) => (match ? "-15px" : "0")};
-  margin-right: ${({ match }) => (match ? "30px" : "50px")};
+  margin-left: ${({ match }) => (match === "true" ? "-15px" : "0")};
+  margin-right: ${({ match }) => (match === "true" ? "30px" : "50px")};
 
   z-index: 1;
 `;
@@ -401,10 +403,12 @@ export default function PlanContainer() {
         );
       case "text":
         return detail.plandescription.map((desc: any) => (
-          <>
-            <DescriptionLine />
-            <Description>{desc.description}</Description>
-          </>
+          <div key={desc.pdescId}>
+            <Description>
+              <DescriptionLine />
+              {desc.description}
+            </Description>
+          </div>
         ));
     }
 
@@ -424,7 +428,7 @@ export default function PlanContainer() {
     >
       <DetailHeader>
         <DetailChecked
-          completed={detail.completed}
+          completed={`${detail.completed}`}
           onClick={() =>
             (detail.descType === "text" || detail.descType === "range") &&
             checkingDetail(detail.pid, detail.completed)
@@ -446,11 +450,11 @@ export default function PlanContainer() {
       <TaskAttributesContainer>
         <TaskAttributesTitle>난이도</TaskAttributesTitle>
         <LineContainer>
-          <DifficultyVerticalLine match={detail.difficulty === 1} />
-          <DifficultyVerticalLine match={detail.difficulty === 2} />
-          <DifficultyVerticalLine match={detail.difficulty === 3} />
-          <DifficultyVerticalLine match={detail.difficulty === 4} />
-          <DifficultyVerticalLine match={detail.difficulty === 5} />
+          <DifficultyVerticalLine match={`${detail.difficulty === 1}`} />
+          <DifficultyVerticalLine match={`${detail.difficulty === 2}`} />
+          <DifficultyVerticalLine match={`${detail.difficulty === 3}`} />
+          <DifficultyVerticalLine match={`${detail.difficulty === 4}`} />
+          <DifficultyVerticalLine match={`${detail.difficulty === 5}`} />
           <DifficultyHorizontalLine />
         </LineContainer>
       </TaskAttributesContainer>

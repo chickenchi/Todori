@@ -14,9 +14,9 @@ import {
 import { useAtom } from "jotai";
 import { loadPlan } from "../components/plan/tools/LoadPlan";
 import { useEffect, useState } from "react";
-import { viewDetailPlan } from "../components/plan/tools/ViewDetailPlan";
 import { searchPlan } from "../components/plan/tools/SearchPlan";
 import PlanContainer from "../components/plan/container/PlanContainer";
+import { viewDetail } from "../components/common/ViewDetail";
 
 const Button = styled.button`
   background-color: #719eff;
@@ -53,6 +53,8 @@ const PlanSection = styled.section`
   display: flex;
 
   flex-direction: column;
+
+  margin-top: 20px;
 `;
 
 const SearchableOptionDiv = styled.div`
@@ -169,16 +171,14 @@ const Plan = () => {
   useEffect(() => {
     if (containerUpdate === null) return;
 
-    viewDetail(containerUpdate);
+    const settingDetail = async () => {
+      setDetail(await viewDetail(containerUpdate));
+    };
+
+    settingDetail();
 
     setContainerUpdate(null);
   }, [containerUpdate]);
-
-  const viewDetail = async (pid: number) => {
-    const result = await viewDetailPlan(pid);
-
-    setDetail(result[0]);
-  };
 
   const handleSearch = (e: any) => {
     setSearch(e.target.value);
@@ -234,15 +234,24 @@ const Plan = () => {
             const { progress } = getProgress(plan.plandescription);
 
             return (
-              <PlanButton onClick={() => viewDetail(plan.pid)} key={plan.pid}>
+              <PlanButton
+                onClick={async () => setDetail(await viewDetail(plan.pid))}
+                key={plan.pid}
+              >
                 <PlanTitle>{plan.title}</PlanTitle>
                 <PlanDeadline>
                   마감일: {new Date(plan.deadline).toLocaleString()}
                 </PlanDeadline>
-                <PlanDuration>예상 작업 시간: {plan.ETC}</PlanDuration>
-                <PlanDifficulty>난이도: {plan.difficulty}</PlanDifficulty>
-                <PlanPenalty>벌칙: {plan.penalty}</PlanPenalty>
-                <PlanReward>보상: {plan.reward}</PlanReward>
+                {plan.ETC && (
+                  <PlanDuration>예상 작업 시간: {plan.ETC}</PlanDuration>
+                )}
+                {plan.difficulty && (
+                  <PlanDifficulty>난이도: {plan.difficulty}</PlanDifficulty>
+                )}
+                {plan.penalty && (
+                  <PlanPenalty>벌칙: {plan.penalty}</PlanPenalty>
+                )}
+                {plan.reward && <PlanReward>보상: {plan.reward}</PlanReward>}
                 <PlanProgressBarContainer>
                   <PlanProcessBar progress={plan.completed ? 100 : progress} />
                 </PlanProgressBarContainer>

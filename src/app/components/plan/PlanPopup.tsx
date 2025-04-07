@@ -1,5 +1,5 @@
 import { useAtom } from "jotai";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled, { createGlobalStyle } from "styled-components";
 import Modal from "react-modal";
 import {
@@ -30,11 +30,15 @@ import {
 import dayjs from "dayjs";
 import { createPlan } from "./tools/CreatePlan";
 import { insertPlanDescription } from "./tools/InsertPlanDescription";
+import { useAlarm } from "@/app/tools/alarmFunction/AlarmProvider";
+import { AlarmManager } from "@/app/tools/alarmFunction/AlarmManager";
+import { useWaiting } from "@/app/tools/waitFunction/WaitProvider";
 
 const GlobalStyle = createGlobalStyle`
   body {
     margin: 0;
     font-family: Arial, sans-serif;
+    overflow: hidden;
   }
 
   .ReactModal__Overlay {
@@ -100,6 +104,9 @@ const PreviousButton = styled(MoveButton)``;
 const CloseButton = styled.button``;
 
 export const PlanPopup = () => {
+  const { setAlarm } = useAlarm();
+  const { setWaiting } = useWaiting();
+
   const [update, setUpdate] = useAtom(updateState);
   const [openSetting, setOpenSetting] = useAtom(isPlanPopupOpenState);
 
@@ -206,19 +213,19 @@ export const PlanPopup = () => {
       parseInt(planValues.range1) < -2147483648 ||
       parseInt(planValues.range2) > 2147483647
     ) {
-      wrongMessage = `범위 혹은 값의 설정이 잘못됐습니다.
--2147483648~2147483647까지의 범위만 지정 가능합니다.
-20억~30억과 같은 범위는 20~30으로 설정하시면 됩니다.`;
+      wrongMessage = `범위 혹은 값의 설정이 잘못됐습니다.`;
     }
 
     if (wrongMessage) {
-      alert(wrongMessage);
+      setAlarm("warning", wrongMessage);
     } else {
       setPlanValues.ranges(`${planValues.range1}~${planValues.range2}`);
     }
   };
 
   const handlePlanOrderChange = (order: number) => {
+    let wrongMessage: string = "";
+
     if (order === 3) {
       switch (planValues.type) {
         case "procedure":
@@ -226,31 +233,28 @@ export const PlanPopup = () => {
             (item) => item === "" || item === null || item === undefined
           );
 
-          if (hasEmpty) {
-            alert("절차에 빈 것도 있을 수 있나요?");
-            return;
-          }
+          if (hasEmpty) wrongMessage = "절차에 빈 것도 있을 수 있나요?";
+
           break;
         case "supplies":
-          if (planValues.supplies.size === 0) {
-            alert("준비물이 설정돼 있지 않습니다.");
-            return;
-          }
+          if (planValues.supplies.size === 0)
+            wrongMessage = "준비물이 설정돼 있지 않습니다.";
+
           break;
         case "range":
-          if (!planValues.ranges) {
-            alert("범위 적용이 되지 않았습니다.");
-            return;
-          }
+          if (!planValues.ranges) wrongMessage = "범위 적용이 되지 않았습니다.";
 
           break;
         case "text":
-          if (planValues.text === "") {
-            alert("입력해 주세요!");
-            return;
-          }
+          if (planValues.text === "") wrongMessage = "입력해 주세요!";
+
           break;
       }
+    }
+
+    if (wrongMessage) {
+      setAlarm("warning", wrongMessage);
+      return;
     }
 
     setPlanOrder(order);
@@ -258,9 +262,12 @@ export const PlanPopup = () => {
   };
 
   const onPlanInsertSuccess = () => {
-    alert("계획이 성공적으로 삽입되었습니다!");
     setOpenSetting(false);
     setUpdate(!update);
+  };
+
+  const onPlanInsertFail = () => {
+    alert("계획 삽입 중 오류가 발생했습니다.");
   };
 
   const checkPlan = async () => {
@@ -299,9 +306,11 @@ export const PlanPopup = () => {
 
     if (problemMessage) {
       setPlanOrder(1);
-      alert(problemMessage);
+      setAlarm("warning", problemMessage);
       return;
     } else if (alertMessage && !confirm(alertMessage)) return;
+
+    setWaiting(true);
 
     ///
     const planData = {
@@ -324,6 +333,8 @@ export const PlanPopup = () => {
       })
       .catch((error) => {
         console.log(`계획 삽입 중 오류 발생: ${error}`);
+        setWaiting(false);
+        onPlanInsertFail();
         return;
       });
 
@@ -350,10 +361,13 @@ export const PlanPopup = () => {
             .catch((error) => {
               console.log(`계획 설명 삽입 중 오류 발생: ${error}`);
               succeed = false;
+              onPlanInsertFail();
             });
         }
 
         if (succeed) onPlanInsertSuccess();
+
+        setWaiting(false);
 
         return;
       case "supplies":
@@ -376,8 +390,11 @@ export const PlanPopup = () => {
             })
             .catch((error) => {
               console.log(`계획 설명 삽입 중 오류 발생: ${error}`);
+              onPlanInsertFail();
             });
         }
+
+        setWaiting(false);
 
         return;
       default:
@@ -398,7 +415,10 @@ export const PlanPopup = () => {
       })
       .catch((error) => {
         console.log(`계획 설명 삽입 중 오류 발생: ${error}`);
+        onPlanInsertFail();
       });
+
+    setWaiting(false);
   };
 
   const planScreen = () => {
@@ -663,6 +683,8 @@ export const PlanPopup = () => {
       overlayClassName="ReactModal__Overlay"
     >
       <GlobalStyle />
+      <AlarmManager />
+
       <Title>{planOrder > 1 ? planValues.title : "계획 설정"}</Title>
 
       {planScreen()}

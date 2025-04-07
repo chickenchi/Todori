@@ -51,12 +51,13 @@ const Arrow = styled.svg`
   right: 8px;
 `;
 
-const DropDownDiv = styled.div<{ dropDownOpened: boolean }>`
+const DropDownDiv = styled.div<{ dropdownopened: string }>`
   position: absolute;
 
   width: 112px;
 
-  display: ${({ dropDownOpened }) => (dropDownOpened ? "flex" : "none")};
+  display: ${({ dropdownopened }) =>
+    dropdownopened === "true" ? "flex" : "none"};
   flex-direction: column;
 
   z-index: 2;
@@ -152,7 +153,7 @@ export const SelectItem = ({ elements, selectState }: SelectItemProps) => {
         </Arrow>
       </OptionsDiv>
 
-      <DropDownDiv dropDownOpened={dropDownOpened} ref={dropdownRef}>
+      <DropDownDiv dropdownopened={`${dropDownOpened}`} ref={dropdownRef}>
         {Object.entries(elements).map(([key, value], index) => (
           <DropDown
             key={index}
