@@ -25,7 +25,7 @@ const ResizableDiv = styled(ResizableBox)`
 
   height: 100%;
 
-  border: 1px solid black;
+  border-left: 2px solid black;
 
   transition: width 0.2s ease-in-out;
 

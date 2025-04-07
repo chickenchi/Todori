@@ -1,4 +1,6 @@
 html, body, #_next {
+  position: relative;
+
   margin: 0;
 
   width: 100%;

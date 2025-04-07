@@ -17,6 +17,8 @@ import { useEffect, useState } from "react";
 import { searchPlan } from "../components/plan/tools/SearchPlan";
 import PlanContainer from "../components/plan/container/PlanContainer";
 import { viewDetail } from "../components/common/ViewDetail";
+import { useAlarm } from "../tools/alarmFunction/AlarmProvider";
+import { AlarmManager } from "../tools/alarmFunction/AlarmManager";
 
 const Button = styled.button`
   background-color: #719eff;
@@ -50,16 +52,23 @@ const Button = styled.button`
 `;
 
 const PlanSection = styled.section`
+  position: relative;
+
   display: flex;
+
+  height: 83%;
 
   flex-direction: column;
 
-  margin-top: 20px;
+  padding-left: 20px;
+  padding-top: 40px;
 `;
 
 const SearchableOptionDiv = styled.div`
-  width: 100%;
-  height: 20px;
+  position: relative;
+
+  width: 360px;
+  height: 35px;
 
   margin-left: 15px;
 
@@ -67,79 +76,88 @@ const SearchableOptionDiv = styled.div`
   align-items: center;
 `;
 
-const OrderDiv = styled.div`
-  margin-left: 5px;
-`;
+const SearchTitle = styled.h2``;
 
 const Search = styled.input`
+  position: relative;
+
+  width: 265px;
   height: 100%;
 
-  margin-left: 20px;
+  border-radius: 20px;
+  border: 2px solid black;
+
+  padding-left: 15px;
+
+  margin-left: 25px;
+
+  font-size: 13pt;
+
+  display: flex;
+  justify-content: center;
+
+  outline: none;
 `;
 
-const SearchButton = styled(Button)`
-  margin: 2px;
+const SearchButton = styled.div`
+  right: 20px;
+
+  position: absolute;
 `;
 
 const PlanDiv = styled.div`
   display: flex;
-  /* flex-direction: 'row'; */
-  flex-wrap: wrap;
+  flex-direction: column;
 
-  width: 100%;
+  height: 100%;
+  width: 530px;
 
-  margin-left: 20px;
   margin-top: 20px;
+
+  display: flex;
+  align-items: center;
 
   overflow-x: none;
   overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const PlanItem = styled.div`
-  width: 300px;
-  height: 260px;
+  width: 480px;
+  min-height: 160px;
 
   margin: 15px;
+  margin-bottom: 5px;
 
-  border: 1px solid black;
-  border-radius: 5px;
+  padding-left: 10px;
+
+  border: 2px solid black;
 
   display: flex;
+
+  &:first-child {
+    border-top: 2px solid black;
+    border-radius: 8px 8px 0 0;
+  }
+
+  &:last-child {
+    border-radius: 0 0 8px 8px;
+  }
+
+  &:only-child {
+    border-radius: 8px;
+  }
 `;
 
 const PlanButton = styled(PlanItem)`
   position: relative;
 
-  border: 1px solid black;
+  border: 2px solid black;
 
   flex-direction: column;
-`;
-const PlanTitle = styled.h2`
-  margin-left: 20px;
-`;
-const PlanPenalty = styled.p``;
-const PlanReward = styled.p``;
-const PlanDeadline = styled.p``;
-const PlanDifficulty = styled.p``;
-const PlanDuration = styled.p``;
-const PlanProgressBarContainer = styled.div`
-  position: absolute;
-  bottom: 0;
-  background-color: black;
-
-  width: 100%;
-
-  border-radius: 5px;
-`;
-const PlanProcessBar = styled.div<{ progress: number }>`
-  background-color: #4caf50;
-
-  width: ${(props) => props.progress}%;
-  height: 20px;
-
-  border-radius: 5px;
-
-  transition: width 0.3s ease-in-out;
 `;
 
 const AddPlanButton = styled(PlanItem)`
@@ -150,7 +168,58 @@ const AddPlanButton = styled(PlanItem)`
   font-weight: 200;
 `;
 
+const PlanTitle = styled.h2`
+  margin-left: 5px;
+  margin-bottom: 10px;
+`;
+const PlanPenalty = styled.p`
+  margin-bottom: 5px;
+`;
+const PlanReward = styled.p`
+  margin-bottom: 5px;
+`;
+const PlanDeadline = styled.p`
+  margin-bottom: 5px;
+`;
+const PlanDifficulty = styled.p`
+  margin-bottom: 5px;
+`;
+const PlanDuration = styled.p`
+  margin-bottom: 5px;
+`;
+const PlanProgressBarContainer = styled.div<{
+  isOnly: string;
+  isLast: string;
+}>`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  background-color: black;
+
+  width: 100%;
+
+  border-radius: ${({ isOnly, isLast }) =>
+    isOnly === "true" || isLast === "true" ? "0 0 8px 8px" : "0"};
+`;
+
+const PlanProcessBar = styled.div<{
+  progress: number;
+  isOnly: string;
+  isLast: string;
+}>`
+  background-color: #4caf50;
+
+  width: ${(props) => props.progress}%;
+  height: 13px;
+
+  border-radius: ${({ isOnly, isLast }) =>
+    isOnly === "true" || isLast === "true" ? "0 0 8px 8px" : "0"};
+
+  transition: width 0.3s ease-in-out;
+`;
+
 const Plan = () => {
+  const { setAlarm } = useAlarm();
   const [update] = useAtom(updateState);
   const [, setOpenSetting] = useAtom(isPlanPopupOpenState);
   const [order] = useAtom(orderState);
@@ -192,7 +261,7 @@ const Plan = () => {
 
   const searching = async () => {
     const result = await searchPlan(search, order).catch(() => {
-      alert("검색 결과가 없습니다.");
+      setAlarm("error", "검색 결과가 없습니다.");
     });
 
     getPlan(result);
@@ -211,26 +280,34 @@ const Plan = () => {
   return (
     <PlanSection>
       <PlanPopup />
+      <AlarmManager />
 
       <SearchableOptionDiv>
+        <SearchTitle>계획</SearchTitle>
+
         <Search
           type="text"
           value={search}
           onKeyDown={(e) => handleKeySearch(e)}
           onChange={(e) => handleSearch(e)}
         />
-
-        <OrderDiv>
-          <SelectItem elements={orderProps} selectState={orderState} />
-        </OrderDiv>
-
-        <SearchButton onClick={searching}>검색</SearchButton>
+        <SearchButton onClick={searching}>
+          <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
+            <path
+              d="M22.0362 20.1522L27.7433 25.858L25.8578 27.7435L20.152 22.0363C18.029 23.7382 15.3883 24.6639 12.6673 24.66C6.04746 24.66 0.674805 19.2874 0.674805 12.6675C0.674805 6.04762 6.04746 0.674957 12.6673 0.674957C19.2872 0.674957 24.6599 6.04762 24.6599 12.6675C24.6638 15.3885 23.7381 18.0291 22.0362 20.1522ZM19.3632 19.1635C21.0539 17.4241 21.9983 15.0931 21.9949 12.6675C21.9949 7.5147 17.8201 3.33997 12.6673 3.33997C7.51455 3.33997 3.33981 7.5147 3.33981 12.6675C3.33981 17.8203 7.51455 21.995 12.6673 21.995C15.093 21.9984 17.424 21.0541 19.1633 19.3633L19.3632 19.1635Z"
+              fill="black"
+            />
+          </svg>
+        </SearchButton>
       </SearchableOptionDiv>
 
       <PlanDiv>
         {plan &&
           plan.length > 0 &&
-          plan.map((plan) => {
+          plan.map((plan, index) => {
+            const isLast = index === plan.length - 1;
+            const isOnly = plan.length === 1;
+
             const { progress } = getProgress(plan.plandescription);
 
             return (
@@ -240,20 +317,25 @@ const Plan = () => {
               >
                 <PlanTitle>{plan.title}</PlanTitle>
                 <PlanDeadline>
-                  마감일: {new Date(plan.deadline).toLocaleString()}
+                  ~ {new Date(plan.deadline).toLocaleString()}
                 </PlanDeadline>
-                {plan.ETC && (
-                  <PlanDuration>예상 작업 시간: {plan.ETC}</PlanDuration>
-                )}
+                {plan.ETC && <PlanDuration>ETC l {plan.ETC}</PlanDuration>}
                 {plan.difficulty && (
-                  <PlanDifficulty>난이도: {plan.difficulty}</PlanDifficulty>
+                  <PlanDifficulty>난이도 l {plan.difficulty}</PlanDifficulty>
                 )}
                 {plan.penalty && (
                   <PlanPenalty>벌칙: {plan.penalty}</PlanPenalty>
                 )}
                 {plan.reward && <PlanReward>보상: {plan.reward}</PlanReward>}
-                <PlanProgressBarContainer>
-                  <PlanProcessBar progress={plan.completed ? 100 : progress} />
+                <PlanProgressBarContainer
+                  isLast={`${isLast}`}
+                  isOnly={`${isOnly}`}
+                >
+                  <PlanProcessBar
+                    progress={plan.completed ? 100 : progress}
+                    isLast={`${isLast}`}
+                    isOnly={`${isOnly}`}
+                  />
                 </PlanProgressBarContainer>
               </PlanButton>
             );

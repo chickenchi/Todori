@@ -3,10 +3,13 @@ import styled from "styled-components";
 import Link from "next/link";
 
 const HeaderDiv = styled.div`
+  position: relative;
+
   width: 100%;
   height: 12%;
 
   display: flex;
+  justify-content: center;
   flex-direction: column;
 `;
 
@@ -43,9 +46,14 @@ const TitleElement = styled(Link)`
 `;
 
 const HorizontalLine = styled.div`
+  position: absolute;
+
+  left: 0;
+  bottom: 0;
+
   background-color: black;
   width: 100%;
-  height: 1px;
+  height: 2px;
 `;
 
 const Header = () => {

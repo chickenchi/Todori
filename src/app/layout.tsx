@@ -20,10 +20,12 @@ export default function RootLayout({
   return (
     <html lang="en" data-google-analytics-opt-out="">
       <body cz-shortcut-listen="true">
-        <Header />
         <WaitProvider>
           <Waiting />
-          <AlarmProvider>{children}</AlarmProvider>
+          <AlarmProvider>
+            <Header />
+            {children}
+          </AlarmProvider>
         </WaitProvider>
       </body>
     </html>

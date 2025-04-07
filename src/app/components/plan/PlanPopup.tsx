@@ -552,6 +552,7 @@ export const PlanPopup = () => {
 
                 <InputText
                   type="text"
+                  value={planValues.supply}
                   placeholder="필요 물품 입력"
                   onChange={(event) =>
                     handleTextChange(event, setPlanValues.supply)
@@ -559,6 +560,7 @@ export const PlanPopup = () => {
                 />
                 <InputText
                   type="text"
+                  value={planValues.supplyCount}
                   placeholder="개수 입력(1개면 생략)"
                   onChange={(event) =>
                     handleTextChange(event, setPlanValues.supplyCount)

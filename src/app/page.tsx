@@ -16,10 +16,12 @@ import PlanContainer from "./components/plan/container/PlanContainer";
 import { planComplete } from "./components/plan/tools/PlanComplete";
 
 const MainSection = styled.header`
+  position: relative;
+
   display: flex;
   align-items: center;
 
-  height: 88%;
+  height: 83%;
 
   gap: 20px;
 `;
@@ -328,7 +330,7 @@ const Main = () => {
                     <PlanTitle type={plan.descType}>{plan.title}</PlanTitle>
                   </PlanTitleContainer>
                   <PlanDeadline>
-                    마감일: {new Date(plan.deadline).toLocaleString()}
+                    ~ {new Date(plan.deadline).toLocaleString()}
                   </PlanDeadline>
                 </Plan>
               );
