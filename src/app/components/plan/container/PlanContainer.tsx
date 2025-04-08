@@ -31,6 +31,13 @@ const ResizableDiv = styled(ResizableBox)`
 
   .react-resizable-handle {
     cursor: ew-resize;
+
+    transform: rotate(0deg);
+
+    width: 1px;
+    height: 100%;
+
+    top: 10px;
   }
 `;
 
@@ -447,22 +454,26 @@ export default function PlanContainer() {
         <TaskAttributes>~ {formatDateTime(detail.deadline)}</TaskAttributes>
       </TaskAttributesContainer>
 
-      <TaskAttributesContainer>
-        <TaskAttributesTitle>난이도</TaskAttributesTitle>
-        <LineContainer>
-          <DifficultyVerticalLine match={`${detail.difficulty === 1}`} />
-          <DifficultyVerticalLine match={`${detail.difficulty === 2}`} />
-          <DifficultyVerticalLine match={`${detail.difficulty === 3}`} />
-          <DifficultyVerticalLine match={`${detail.difficulty === 4}`} />
-          <DifficultyVerticalLine match={`${detail.difficulty === 5}`} />
-          <DifficultyHorizontalLine />
-        </LineContainer>
-      </TaskAttributesContainer>
+      {detail.difficulty && (
+        <TaskAttributesContainer>
+          <TaskAttributesTitle>난이도</TaskAttributesTitle>
+          <LineContainer>
+            <DifficultyVerticalLine match={`${detail.difficulty === 1}`} />
+            <DifficultyVerticalLine match={`${detail.difficulty === 2}`} />
+            <DifficultyVerticalLine match={`${detail.difficulty === 3}`} />
+            <DifficultyVerticalLine match={`${detail.difficulty === 4}`} />
+            <DifficultyVerticalLine match={`${detail.difficulty === 5}`} />
+            <DifficultyHorizontalLine />
+          </LineContainer>
+        </TaskAttributesContainer>
+      )}
 
-      <TaskAttributesContainer>
-        <TaskAttributesTitle>소요 기간</TaskAttributesTitle>
-        <TaskAttributes>{detail.ETC}</TaskAttributes>
-      </TaskAttributesContainer>
+      {detail.ETC && (
+        <TaskAttributesContainer>
+          <TaskAttributesTitle>소요 시간</TaskAttributesTitle>
+          <TaskAttributes>{detail.ETC}</TaskAttributes>
+        </TaskAttributesContainer>
+      )}
     </ResizableDiv>
   );
 }

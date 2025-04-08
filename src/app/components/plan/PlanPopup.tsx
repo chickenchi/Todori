@@ -18,6 +18,7 @@ import {
   planTextState,
   planRangesState,
   updateState,
+  planStartTimeState,
 } from "@/atoms/plan_popup/PlanPopupState";
 import { SelectItem } from "../select/SelectItem";
 import { targetProps, typeProps } from "../select/props/SelectProps";
@@ -37,7 +38,7 @@ import { useWaiting } from "@/app/tools/waitFunction/WaitProvider";
 const GlobalStyle = createGlobalStyle`
   body {
     margin: 0;
-    font-family: Arial, sans-serif;
+    font-family: "Pretendard";
     overflow: hidden;
   }
 
@@ -81,23 +82,35 @@ const StyledModal = styled(Modal)`
   }
 `;
 
-const Title = styled.h1``;
+const Title = styled.h1`
+  font-family: "Pretendard";
+`;
 
-const OptionContainer = styled.div``;
-const InputText = styled.input``;
+const OptionContainer = styled.div`
+  font-family: "Pretendard";
+`;
+const InputText = styled.input`
+  font-family: "Pretendard";
+`;
 const SelectItemContainer = styled.div`
   display: flex;
 `;
 
 const InsertButtonContainer = styled.div``;
-const InsertButton = styled.button``;
+const InsertButton = styled.button`
+  font-family: "Pretendard";
+`;
 
-const InputDescription = styled.text``;
+const InputDescription = styled.text`
+  font-family: "Pretendard";
+`;
 const Supply = styled.button``;
 
 const ButtonContainer = styled.div``;
 
-const MoveButton = styled.button``;
+const MoveButton = styled.button`
+  font-family: "Pretendard";
+`;
 const NextButton = styled(MoveButton)``;
 const PreviousButton = styled(MoveButton)``;
 
@@ -117,6 +130,7 @@ export const PlanPopup = () => {
   const [planTitle, setPlanTitle] = useAtom(planTitleState);
   const [planType, setPlanType] = useAtom(planTypeState);
   const [planDeadline, setPlanDeadline] = useAtom(planDeadlineState);
+  const [planStartTime, setPlanStartTime] = useAtom(planStartTimeState);
   const [planTarget] = useAtom(planTargetState);
 
   // Part 2
@@ -145,6 +159,8 @@ export const PlanPopup = () => {
     title: planTitle,
     type: planType,
     deadline: planDeadline,
+    startTime: planStartTime,
+
     target: planTarget,
 
     supplies: planSupplies,
@@ -171,6 +187,7 @@ export const PlanPopup = () => {
     title: setPlanTitle, // 제목, 유형과 마감 기한
     type: setPlanType,
     deadline: setPlanDeadline,
+    startTime: setPlanStartTime,
 
     /* 계획 내용 */
     supplies: setPlanSupplies,
@@ -447,6 +464,14 @@ export const PlanPopup = () => {
                 handleTextChange(event, setPlanValues.deadline)
               }
             />
+            <InputText
+              type="text"
+              value={planValues.startTime}
+              placeholder="시작 예정 시간[exㅣ23:15]"
+              onChange={(event) =>
+                handleTextChange(event, setPlanValues.startTime)
+              }
+            />
           </>
         );
       case 2:
@@ -629,8 +654,8 @@ export const PlanPopup = () => {
         return (
           <>
             <InputText
-              type="time"
-              placeholder="예상 작업 시간"
+              type="text"
+              placeholder="작업 시간[n일 m시간 o분(초 불가)]"
               value={planValues.etc}
               onChange={(event) => handleTextChange(event, setPlanValues.etc)}
             />
@@ -687,7 +712,9 @@ export const PlanPopup = () => {
       <GlobalStyle />
       <AlarmManager />
 
-      <Title>{planOrder > 1 ? planValues.title : "계획 설정"}</Title>
+      <Title>
+        {planOrder > 1 && planValues.title ? planValues.title : "계획 설정"}
+      </Title>
 
       {planScreen()}
 

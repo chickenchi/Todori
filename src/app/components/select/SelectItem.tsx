@@ -20,12 +20,11 @@ const OptionsDiv = styled.div`
   border: 1px solid black;
   border-radius: 2px;
 
-  text-align: left;
   font-size: 10pt;
+  text-align: left;
 
   display: flex;
   align-items: center;
-  font-family: "Pretendard";
 `;
 
 const Options = styled.input`
@@ -37,6 +36,9 @@ const Options = styled.input`
   height: 100%;
 
   padding: 5px;
+
+  font-family: "Pretendard";
+  font-weight: 300;
 
   border: none;
 
@@ -74,8 +76,11 @@ const DropDown = styled.button<{ selected: boolean }>`
 
   padding: 7px;
 
+  font-family: "Pretendard";
+  font-weight: 300;
   color: ${({ selected }) => (selected ? "white" : "black")};
   font-size: 10pt;
+
   text-align: left;
 `;
 

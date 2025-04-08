@@ -13,7 +13,8 @@ export async function GET(req: Request) {
       ? { title: { contains: query } } 
       : {};
 
-    let orderBy: any[] = []; 
+    let orderBy: any[] = [];
+    let options;
 
     if (order === "newest") {
       orderBy = [{ pid: "desc" }]; 
@@ -25,10 +26,15 @@ export async function GET(req: Request) {
       ];
     } else if (order === "deadline") {
       orderBy = [{ deadline: "asc" }]; 
+    } else if (order === "uncompleted") {
+      options = {completed: false}
     }
 
     const plans = await prisma.plan.findMany({
-      where: whereCondition,
+      where: {
+        ...whereCondition,
+        ...(options || {}),
+      },
       orderBy,
       include: {
         plandescription: {

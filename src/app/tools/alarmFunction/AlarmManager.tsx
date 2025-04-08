@@ -17,7 +17,7 @@ const AlarmContainer = styled.div`
   display: flex;
   align-items: center;
 
-  font-family: "KCC-Hanbit";
+  font-family: "Pretendard";
 
   z-index: 999;
 `;

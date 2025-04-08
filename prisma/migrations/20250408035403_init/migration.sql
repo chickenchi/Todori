@@ -4,11 +4,13 @@ CREATE TABLE `plan` (
     `title` VARCHAR(100) NOT NULL,
     `planType` ENUM('routine', 'project', 'common') NOT NULL,
     `deadline` DATETIME(0) NOT NULL,
-    `ETC` VARCHAR(10) NULL,
+    `startTime` VARCHAR(5) NOT NULL,
+    `ETC` VARCHAR(5) NULL,
     `difficulty` INTEGER NULL,
     `penalty` TEXT NULL,
     `reward` TEXT NULL,
     `completed` BOOLEAN NOT NULL,
+    `note` TEXT NULL,
     `descType` ENUM('procedure', 'supplies', 'range', 'text') NOT NULL,
 
     PRIMARY KEY (`pid`)

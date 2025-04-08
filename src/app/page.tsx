@@ -14,6 +14,7 @@ import {
 } from "@/atoms/plan_popup/PlanPopupState";
 import PlanContainer from "./components/plan/container/PlanContainer";
 import { planComplete } from "./components/plan/tools/PlanComplete";
+import { searchPlan } from "./components/plan/tools/SearchPlan";
 
 const MainSection = styled.header`
   position: relative;
@@ -21,7 +22,7 @@ const MainSection = styled.header`
   display: flex;
   align-items: center;
 
-  height: 83%;
+  height: 88%;
 
   gap: 20px;
 `;
@@ -53,10 +54,12 @@ const LevelNameCard = styled.div`
 const Level = styled.p`
   margin-right: 10px;
 
+  font-family: "Pretendard";
   font-size: 15pt;
 `;
 
 const Name = styled.p`
+  font-family: "Pretendard";
   font-size: 15pt;
 `;
 
@@ -123,7 +126,9 @@ const DashboardDiv = styled.div`
   margin-right: 50px;
 `;
 
-const DashboardTitle = styled.h2``;
+const DashboardTitle = styled.h2`
+  font-family: "Pretendard";
+`;
 
 const RecentPlanDiv = styled(DashboardDiv)``;
 const RecentPlanTitle = styled(DashboardTitle)`
@@ -188,10 +193,12 @@ const PlanTitle = styled.h2<{ type?: string }>`
     margin-left: 10px;
   `}
 
+  font-family: "Pretendard";
   font-size: 18pt;
 `;
 
 const PlanDeadline = styled.p`
+  font-family: "Pretendard";
   font-size: 12pt;
 `;
 
@@ -207,7 +214,7 @@ const Main = () => {
 
   useEffect(() => {
     const loadingPlan = async () => {
-      const result = await loadPlan();
+      const result = await searchPlan("", "uncompleted");
       getPlan(result);
     };
 

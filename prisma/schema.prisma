@@ -12,11 +12,13 @@ model plan {
   title      String        @db.VarChar(100)
   planType   plan_planType
   deadline   DateTime      @db.DateTime(0)
-  ETC        String?       @db.VarChar(10)
+  startTime  String        @db.VarChar(5)
+  ETC        String?       @db.VarChar(5)
   difficulty Int?
   penalty    String?       @db.Text
   reward     String?       @db.Text
   completed  Boolean
+  note       String?       @db.Text
 
   descType plandescription_descType
 

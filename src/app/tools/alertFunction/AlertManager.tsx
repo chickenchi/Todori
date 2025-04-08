@@ -14,7 +14,7 @@ const AlertContainer = styled.div<{ isVisible: boolean }>`
   align-items: center;
   justify-content: center;
   background-color: rgba(0, 0, 0, 0.5);
-  font-family: "KCC-Hanbit";
+  font-family: "Pretendard";
   z-index: 9999;
 `;
 
@@ -53,7 +53,7 @@ const Yes = styled.button`
   border-radius: 3px;
   border: 1px solid #000;
   font-size: 12pt;
-  font-family: "KCC-Hanbit";
+  font-family: "Pretendard";
 
   &:hover {
     background-color: rgba(240, 240, 240);
@@ -76,7 +76,7 @@ const No = styled.button`
   border-radius: 3px;
   border: 1px solid #000;
   font-size: 12pt;
-  font-family: "KCC-Hanbit";
+  font-family: "Pretendard";
 
   &:hover {
     background-color: rgba(240, 240, 240);

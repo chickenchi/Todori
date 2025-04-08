@@ -19,6 +19,7 @@ import PlanContainer from "../components/plan/container/PlanContainer";
 import { viewDetail } from "../components/common/ViewDetail";
 import { useAlarm } from "../tools/alarmFunction/AlarmProvider";
 import { AlarmManager } from "../tools/alarmFunction/AlarmManager";
+import { displayDifficulty } from "../components/common/DisplayDifficulty";
 
 const Button = styled.button`
   background-color: #719eff;
@@ -27,6 +28,7 @@ const Button = styled.button`
   height: 25px;
 
   color: white;
+  font-family: "Pretendard";
   font-size: 9pt;
 
   border: none;
@@ -35,7 +37,6 @@ const Button = styled.button`
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease,
     box-shadow 0.2s ease;
-  font-family: "Pretendard";
 
   &:hover {
     background-color: rgba(230, 230, 230);
@@ -56,7 +57,7 @@ const PlanSection = styled.section`
 
   display: flex;
 
-  height: 83%;
+  height: 83.4%;
 
   flex-direction: column;
 
@@ -76,7 +77,9 @@ const SearchableOptionDiv = styled.div`
   align-items: center;
 `;
 
-const SearchTitle = styled.h2``;
+const SearchTitle = styled.h2`
+  font-family: "Pretendard";
+`;
 
 const Search = styled.input`
   position: relative;
@@ -91,6 +94,7 @@ const Search = styled.input`
 
   margin-left: 25px;
 
+  font-family: "Pretendard";
   font-size: 13pt;
 
   display: flex;
@@ -164,6 +168,7 @@ const AddPlanButton = styled(PlanItem)`
   align-items: center;
   justify-content: center;
 
+  font-family: "Pretendard";
   font-size: 30pt;
   font-weight: 200;
 `;
@@ -321,7 +326,9 @@ const Plan = () => {
                 </PlanDeadline>
                 {plan.ETC && <PlanDuration>ETC l {plan.ETC}</PlanDuration>}
                 {plan.difficulty && (
-                  <PlanDifficulty>난이도 l {plan.difficulty}</PlanDifficulty>
+                  <PlanDifficulty>
+                    난이도 l {displayDifficulty(plan.difficulty)}
+                  </PlanDifficulty>
                 )}
                 {plan.penalty && (
                   <PlanPenalty>벌칙: {plan.penalty}</PlanPenalty>
@@ -341,9 +348,8 @@ const Plan = () => {
             );
           })}
         <AddPlanButton onClick={() => setOpenSetting(true)}>+</AddPlanButton>
-
-        {detail !== undefined && <PlanContainer />}
       </PlanDiv>
+      {detail !== undefined && <PlanContainer />}
     </PlanSection>
   );
 };

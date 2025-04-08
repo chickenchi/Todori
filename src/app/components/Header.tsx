@@ -30,12 +30,16 @@ const Element = styled(Link)`
   margin-left: 50px;
 
   color: black;
+
   font-size: 13pt;
+  font-family: "Pretendard";
+
   text-decoration: none;
 `;
 
 const Title = styled.h1`
   margin-left: 20px;
+  font-family: "Pretendard";
 `;
 
 const TitleElement = styled(Link)`

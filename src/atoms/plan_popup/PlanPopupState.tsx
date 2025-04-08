@@ -14,6 +14,7 @@ export const detailState = atom<
       title: string;
       planType: string;
       deadline: string;
+      startTime: string;
       ETC: string;
       difficulty: number;
       penalty: string;
@@ -46,6 +47,7 @@ export const planTitleState = atom<string>("");
 export const planTypeState = atom<string>("procedure");
 export const planTargetState = atom<string>("routine");
 export const planDeadlineState = atom<string>("");
+export const planStartTimeState = atom<string>("");
 
 export const planProceduresState = atom<string[]>([""]);
 export const planSuppliesState = atom<Set<Record<string, number>>>(
