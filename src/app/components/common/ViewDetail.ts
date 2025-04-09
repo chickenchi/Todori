@@ -1,4 +1,4 @@
-import { viewDetailPlan } from "../plan/tools/ViewDetailPlan";
+import { viewDetailPlan } from "../plan/tools/common/ViewDetailPlan";
 
 export const viewDetail = async (pid: number) => {
     const result = await viewDetailPlan(pid);

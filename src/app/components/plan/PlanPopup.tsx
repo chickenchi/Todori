@@ -19,21 +19,26 @@ import {
   planRangesState,
   updateState,
   planStartTimeState,
+  planPopupTypeState,
+  planIdState,
 } from "@/atoms/plan_popup/PlanPopupState";
 import { SelectItem } from "../select/SelectItem";
 import { targetProps, typeProps } from "../select/props/SelectProps";
-import { insertSupply, removeSupply } from "./tools/ModifySupply";
+import { insertSupply, removeSupply } from "./tools/popup/ModifySupply";
 import {
   editProcedure,
   insertProcedure,
   removeProcedure,
-} from "./tools/ProcedureSupply";
+} from "./tools/popup/ProcedureSupply";
 import dayjs from "dayjs";
-import { createPlan } from "./tools/CreatePlan";
-import { insertPlanDescription } from "./tools/InsertPlanDescription";
+import { createPlan } from "./tools/popup/CreatePlan";
+import { insertPlanDescription } from "./tools/popup/InsertPlanDescription";
 import { useAlarm } from "@/app/tools/alarmFunction/AlarmProvider";
 import { AlarmManager } from "@/app/tools/alarmFunction/AlarmManager";
 import { useWaiting } from "@/app/tools/waitFunction/WaitProvider";
+import { useAlert } from "@/app/tools/alertFunction/AlertProvider";
+import { modifyPlan } from "./tools/popup/ModifyPlan";
+import { clearPlanDescription } from "./tools/popup/ClearPlanDescription";
 
 const GlobalStyle = createGlobalStyle`
   body {
@@ -118,7 +123,10 @@ const CloseButton = styled.button``;
 
 export const PlanPopup = () => {
   const { setAlarm } = useAlarm();
+  const { showAlert } = useAlert();
   const { setWaiting } = useWaiting();
+
+  const [planPopupType] = useAtom(planPopupTypeState);
 
   const [update, setUpdate] = useAtom(updateState);
   const [openSetting, setOpenSetting] = useAtom(isPlanPopupOpenState);
@@ -127,6 +135,7 @@ export const PlanPopup = () => {
   const [nextButtonText, setNextButtonText] = useState<string>("다음");
 
   // Part 1
+  const [planId] = useAtom(planIdState);
   const [planTitle, setPlanTitle] = useAtom(planTitleState);
   const [planType, setPlanType] = useAtom(planTypeState);
   const [planDeadline, setPlanDeadline] = useAtom(planDeadlineState);
@@ -156,6 +165,7 @@ export const PlanPopup = () => {
   const [planReward, setPlanReward] = useAtom(planRewardState);
 
   const planValues = {
+    pid: planId,
     title: planTitle,
     type: planType,
     deadline: planDeadline,
@@ -256,7 +266,6 @@ export const PlanPopup = () => {
         case "supplies":
           if (planValues.supplies.size === 0)
             wrongMessage = "준비물이 설정돼 있지 않습니다.";
-
           break;
         case "range":
           if (!planValues.ranges) wrongMessage = "범위 적용이 되지 않았습니다.";
@@ -278,13 +287,18 @@ export const PlanPopup = () => {
     setNextButtonText(order !== 4 ? "다음" : "완료");
   };
 
-  const onPlanInsertSuccess = () => {
+  const onPlanSettingSuccess = () => {
     setOpenSetting(false);
     setUpdate(!update);
   };
 
-  const onPlanInsertFail = () => {
-    alert("계획 삽입 중 오류가 발생했습니다.");
+  const onPlanSettingFail = () => {
+    setAlarm(
+      "error",
+      `계획 ${
+        planPopupType === "insert" ? "삽입" : "수정"
+      } 중 오류가 발생했습니다.`
+    );
   };
 
   const checkPlan = async () => {
@@ -310,30 +324,60 @@ export const PlanPopup = () => {
       problemMessage = "시간이 뭔가 잘못된 거 같아요!";
     } else if (currentDay === setDay && currentTime > setPossibleTime) {
       problemMessage = "너무 빨라요! 5분 이후로 설정해 주세요!";
+    } else if (!planValues.startTime) {
+      problemMessage = "계획은 항상 시작하는 날을 정해야 해요!";
+    } else if (
+      planValues.startTime.split(":")[0].length != 2 ||
+      planValues.startTime.split(":")[1].length != 2
+    ) {
+      problemMessage = `시간은 XX:XX의 형태로만 구성돼요!
+[24시 기준]`;
     }
-
-    let alertMessage: string = "";
-
-    if (planValues.etc === "" || planValues.difficulty === undefined) {
-      alertMessage =
-        "설정되지 않은 항목이 있습니다.\n이러한 항목은 추가 점수를 획득하지 못합니다.\n계속하시겠습니까?";
-    }
-
-    // 바로 삽입하지 않으면 달력 유저가 충돌을 일으키는 행동을 저지를 수도 있다. 그래서 알림창을 일정 시간 후 꺼지게 해야 한다.
 
     if (problemMessage) {
-      setPlanOrder(1);
+      setPlanOrder(1); // 처음 위치로 돌아감
+      setNextButtonText("다음");
       setAlarm("warning", problemMessage);
-      return;
-    } else if (alertMessage && !confirm(alertMessage)) return;
+      return false;
+    } else if (planValues.difficulty === undefined) {
+      const confirmed = await showAlert({
+        title: "토도리",
+        description: `난이도 미설정 시 이에 대한 추가 점수를 획득하지 못합니다.\n계속하시겠습니까?`,
+      });
+
+      if (!confirmed) {
+        setPlanOrder(3);
+        setNextButtonText("다음");
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const insertOrEditPlan = async () => {
+    const check = await checkPlan();
+    if (!check) return;
 
     setWaiting(true);
 
     ///
-    const planData = {
+    const planData: {
+      title: string;
+      planType: string;
+      deadline: string;
+      startTime: string;
+      ETC: string;
+      difficulty?: number;
+      penalty: string;
+      reward: string;
+      descType: string;
+      pid?: number | null;
+    } = {
       title: planValues.title,
       planType: planValues.target,
       deadline: planValues.deadline,
+      startTime: planValues.startTime,
       ETC: planValues.etc,
       difficulty: planValues.difficulty,
       penalty: planValues.penalty,
@@ -343,25 +387,44 @@ export const PlanPopup = () => {
 
     let pid;
 
-    await createPlan(planData)
-      .then((newPlan) => {
+    if (planValues.pid != null) {
+      planData.pid = planValues.pid;
+      pid = planData.pid;
+    }
+
+    if (planPopupType === "insert") {
+      try {
+        const newPlan = await createPlan(planData);
         console.log(`계획 삽입 완료: ${newPlan}`);
         pid = newPlan.pid;
-      })
-      .catch((error) => {
+      } catch (error) {
         console.log(`계획 삽입 중 오류 발생: ${error}`);
         setWaiting(false);
-        onPlanInsertFail();
+        onPlanSettingFail();
         return;
-      });
+      }
+    } else {
+      try {
+        const modifiedPlan = await modifyPlan(planData);
+        console.log(`계획 수정 완료: ${modifiedPlan}`);
+        pid = modifiedPlan.pid;
+      } catch (error) {
+        console.log(`계획 수정 중 오류 발생: ${error}`);
+        setWaiting(false);
+        onPlanSettingFail();
+        return;
+      }
+    }
 
     let planDescData;
+
+    let succeed = true;
+
+    if (planPopupType !== "insert") await clearPlanDescription(planData);
 
     switch (planValues.type) {
       case "procedure":
         const procedures = planValues.procedures;
-
-        let succeed = true;
 
         for (let i = 0; i < procedures.length; i++) {
           const planDescData = {
@@ -372,17 +435,17 @@ export const PlanPopup = () => {
           };
 
           await insertPlanDescription(planDescData)
-            .then((newPlan) => {
-              console.log(`계획 설명 삽입 완료: ${newPlan}`);
+            .then((newPlanDesc) => {
+              console.log(`계획 설명 삽입 완료: ${newPlanDesc}`);
             })
             .catch((error) => {
               console.log(`계획 설명 삽입 중 오류 발생: ${error}`);
               succeed = false;
-              onPlanInsertFail();
+              onPlanSettingFail();
             });
         }
 
-        if (succeed) onPlanInsertSuccess();
+        if (succeed) onPlanSettingSuccess();
 
         setWaiting(false);
 
@@ -401,15 +464,18 @@ export const PlanPopup = () => {
           };
 
           await insertPlanDescription(planDescData)
-            .then((newPlan) => {
-              console.log(`계획 설명 삽입 완료: ${newPlan}`);
-              onPlanInsertSuccess();
+            .then((newPlanDesc) => {
+              console.log(`계획 설명 삽입 완료: ${newPlanDesc}`);
+              onPlanSettingSuccess();
             })
             .catch((error) => {
               console.log(`계획 설명 삽입 중 오류 발생: ${error}`);
-              onPlanInsertFail();
+              succeed = false;
+              onPlanSettingFail();
             });
         }
+
+        if (succeed) onPlanSettingSuccess();
 
         setWaiting(false);
 
@@ -425,15 +491,18 @@ export const PlanPopup = () => {
     }
 
     await insertPlanDescription(planDescData)
-      .then((newPlan) => {
-        console.log(`계획 설명 삽입 완료: ${newPlan}`);
-        pid = newPlan.pid;
-        onPlanInsertSuccess();
+      .then((newPlanDesc) => {
+        console.log(`계획 설명 삽입 완료: ${newPlanDesc}`);
+        pid = newPlanDesc.pid;
+        onPlanSettingSuccess();
       })
       .catch((error) => {
         console.log(`계획 설명 삽입 중 오류 발생: ${error}`);
-        onPlanInsertFail();
+        succeed = false;
+        onPlanSettingFail();
       });
+
+    if (succeed) onPlanSettingSuccess();
 
     setWaiting(false);
   };
@@ -726,7 +795,11 @@ export const PlanPopup = () => {
         )}
         <NextButton
           onClick={() =>
-            planOrder < 4 ? handlePlanOrderChange(planOrder + 1) : checkPlan()
+            planOrder < 4
+              ? handlePlanOrderChange(planOrder + 1)
+              : planPopupType === "insert" || planPopupType === "edit"
+              ? insertOrEditPlan()
+              : setAlarm("warning", "뭔가 잘못된 거 같아요!")
           }
         >
           {nextButtonText}

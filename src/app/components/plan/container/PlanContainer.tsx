@@ -5,16 +5,34 @@ import { ResizableBox } from "react-resizable";
 import styled from "styled-components";
 import "react-resizable/css/styles.css";
 import { format } from "date-fns";
-import { planComplete } from "../tools/PlanComplete";
+import { planComplete } from "../tools/common/PlanComplete";
 import { useAtom } from "jotai";
 import {
   containerUpdateState,
   detailState,
+  isPlanPopupOpenState,
+  planDeadlineState,
+  planDifficultyState,
+  planETCState,
+  planIdState,
+  planPenaltyState,
+  planPopupTypeState,
+  planProceduresState,
+  planRangesState,
+  planRewardState,
+  planStartTimeState,
+  planSuppliesState,
+  planTargetState,
+  planTextState,
+  planTitleState,
+  planTypeState,
   updateState,
 } from "@/atoms/plan_popup/PlanPopupState";
-import { planSectionComplete } from "../tools/PlanSectionComplete";
-import { removePlan } from "../tools/RemovePlan";
-import { partialUpdatePlan } from "../tools/PartialUpdatePlan";
+import { planSectionComplete } from "../tools/plan_container/PlanSectionComplete";
+import { removePlan } from "../tools/plan_container/RemovePlan";
+import { partialUpdatePlan } from "../tools/plan_container/PartialUpdatePlan";
+import { useAlarm } from "@/app/tools/alarmFunction/AlarmProvider";
+import { useAlert } from "@/app/tools/alertFunction/AlertProvider";
 
 const ResizableDiv = styled(ResizableBox)`
   position: absolute;
@@ -52,7 +70,7 @@ const DetailChecked = styled.button<{ completed: string }>`
   background-color: ${({ completed }) =>
     completed === "true" ? "black" : "rgba(0, 0, 0, 0)"};
 
-  border: 1px solid black;
+  border: 2px solid black;
   border-radius: 5px;
 
   width: 40px;
@@ -95,7 +113,7 @@ const DetailEdit = styled.button`
   position: absolute;
   right: 90px;
 
-  background-color: rgba(255, 255, 0, 1);
+  background-color: yellow;
 
   width: 30px;
   height: 30px;
@@ -204,6 +222,31 @@ const formatDateTime = (deadline: string) => {
 };
 
 export default function PlanContainer() {
+  const { setAlarm } = useAlarm();
+  const { showAlert } = useAlert();
+
+  const [, setPlanId] = useAtom(planIdState);
+  const [, setPlanTitle] = useAtom(planTitleState);
+  const [, setPlanType] = useAtom(planTypeState);
+  const [, setPlanTarget] = useAtom(planTargetState);
+  const [, setPlanDeadline] = useAtom(planDeadlineState);
+  const [, setPlanStartTime] = useAtom(planStartTimeState);
+
+  const [, setPlanProcedures] = useAtom(planProceduresState);
+  const [, setPlanSupplies] = useAtom(planSuppliesState);
+  const [, setPlanRanges] = useAtom(planRangesState);
+  const [, setPlanText] = useAtom(planTextState);
+
+  const [, setPlanETC] = useAtom(planETCState);
+  const [, setPlanDifficulty] = useAtom(planDifficultyState);
+
+  const [, setPlanPenalty] = useAtom(planPenaltyState);
+  const [, setPlanReward] = useAtom(planRewardState);
+
+  const [, setPlanPopupType] = useAtom(planPopupTypeState);
+
+  const [, setOpenPlanSetting] = useAtom(isPlanPopupOpenState);
+
   const [update, setUpdate] = useAtom(updateState);
   const [, setContainerUpdate] = useAtom(containerUpdateState);
   const [detail, setDetail] = useAtom(detailState);
@@ -255,8 +298,11 @@ export default function PlanContainer() {
   };
 
   const deletePlan = async (pid: number) => {
-    const confirmDelete = window.confirm(`정말로 계획을 삭제하시겠습니까?
-  삭제 시 패널티가 부여됩니다!`);
+    const confirmDelete = await showAlert({
+      title: "토도리",
+      description: `정말로 계획을 삭제하시겠습니까?
+삭제 시 패널티가 부여됩니다!`,
+    });
 
     const deleteData = {
       pid: pid,
@@ -267,11 +313,81 @@ export default function PlanContainer() {
         await removePlan(deleteData);
         setContainerUpdate(pid);
         setUpdate(!update);
-        alert("계획이 삭제되었습니다.");
+        setAlarm("success", "계획이 삭제되었습니다.");
       } catch (error) {
-        alert("삭제 도중 오류가 발생했습니다.");
+        setAlarm("error", "삭제 도중 오류가 발생했습니다.");
       }
     }
+  };
+
+  const editPlan = async () => {
+    const confirmEdit = await showAlert({
+      title: "토도리",
+      description: `정말로 계획을 수정하시겠습니까?
+삭제 시 패널티가 부여됩니다!`,
+    });
+
+    if (confirmEdit) {
+      setOpenPlanSetting(true);
+      reloadPlan();
+      setPlanPopupType("edit");
+    }
+  };
+
+  const toDatetimeLocal = (utcString: string) => {
+    const date = new Date(utcString);
+    const offset = date.getTimezoneOffset();
+    const local = new Date(date.getTime() - offset * 60000);
+    return local.toISOString().slice(0, 16);
+  };
+
+  const reloadPlan = () => {
+    setPlanId(detail.pid);
+    setPlanTitle(detail.title);
+    setPlanType(detail.descType);
+    setPlanTarget(detail.planType);
+    setPlanDeadline(toDatetimeLocal(detail.deadline));
+    setPlanStartTime(detail.startTime);
+
+    switch (detail.descType) {
+      case "procedure":
+        const procedures: string[] = [];
+
+        detail.plandescription.map((item) => {
+          procedures.push(item.description);
+        });
+
+        setPlanProcedures(procedures);
+        break;
+
+      case "supplies":
+        const supplies: Set<Record<string, number>> = new Set();
+
+        detail.plandescription.map((item) => {
+          let supply: string = item.description.split("(")[0];
+          let count: number = parseInt(
+            item.description.split("(")[1].split(")")[0]
+          );
+          supplies.add({ [supply]: count });
+        });
+
+        setPlanSupplies(supplies);
+        break;
+
+      case "range":
+        setPlanRanges(detail.plandescription[0].description);
+        break;
+
+      case "text":
+        setPlanText(detail.plandescription[0].description);
+        break;
+    }
+
+    setPlanETC(detail.ETC);
+    setPlanDifficulty(detail.difficulty);
+
+    setPlanPenalty(detail.penalty);
+    setPlanReward(detail.reward);
   };
 
   const sectionInfo = (planDescription: any) => {
@@ -297,7 +413,7 @@ export default function PlanContainer() {
       setContainerUpdate(detail.pid);
       setUpdate(!update);
     } catch (error) {
-      alert("변경 도중 오류가 발생했습니다.");
+      setAlarm("error", "변경 도중 오류가 발생했습니다.");
     }
   };
 
@@ -444,7 +560,7 @@ export default function PlanContainer() {
         <DetailTitle>{detail.title}</DetailTitle>
         <DetailExit onClick={() => setDetail(undefined)}>X</DetailExit>
         <DetailRemove onClick={() => deletePlan(detail.pid)} />
-        <DetailEdit onClick={() => setDetail(undefined)} />
+        <DetailEdit onClick={() => editPlan()} />
       </DetailHeader>
 
       <DescriptionContainer>{renderDescription(detail)}</DescriptionContainer>

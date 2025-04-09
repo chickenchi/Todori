@@ -98,39 +98,14 @@ const HideInput = styled.input`
 `;
 
 export const AlertManager = () => {
-  const { alert, hideAlert } = useAlert();
+  const { alert } = useAlert();
   const hideInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!alert) return;
 
     hideInputRef.current?.focus();
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case "Tab":
-          e.preventDefault();
-          break;
-
-        case "Enter":
-          e.preventDefault();
-          alert?.onConfirm();
-          hideAlert();
-          break;
-
-        case "Backspace":
-          e.preventDefault();
-          hideAlert();
-          break;
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [alert, hideAlert]);
+  }, [alert]);
 
   return (
     <AlertContainer isVisible={!!alert}>
@@ -147,15 +122,8 @@ export const AlertManager = () => {
             ))}
         </Description>
         <BtnContainer>
-          <Yes
-            onClick={() => {
-              alert?.onConfirm();
-              hideAlert();
-            }}
-          >
-            네
-          </Yes>
-          <No onClick={hideAlert}>아니요</No>
+          <Yes onClick={alert?.onConfirm}>네</Yes>
+          <No onClick={alert?.onCancel}>아니요</No>
         </BtnContainer>
       </Alert>
       <HideInput type="text" ref={hideInputRef} />

@@ -8,6 +8,12 @@ export const containerUpdateState = atom<number | null>(null);
 
 //
 
+export const planPopupTypeState = atom<string>("");
+
+//
+
+export const planIdState = atom<number | null>(null);
+
 export const detailState = atom<
   | {
       pid: number;

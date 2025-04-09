@@ -9,12 +9,13 @@ import {
   containerUpdateState,
   detailState,
   isPlanPopupOpenState,
+  planPopupTypeState,
   updateState,
 } from "@/atoms/plan_popup/PlanPopupState";
 import { useAtom } from "jotai";
-import { loadPlan } from "../components/plan/tools/LoadPlan";
+import { loadPlan } from "../components/plan/tools/common/LoadPlan";
 import { useEffect, useState } from "react";
-import { searchPlan } from "../components/plan/tools/SearchPlan";
+import { searchPlan } from "../components/plan/tools/search/SearchPlan";
 import PlanContainer from "../components/plan/container/PlanContainer";
 import { viewDetail } from "../components/common/ViewDetail";
 import { useAlarm } from "../tools/alarmFunction/AlarmProvider";
@@ -225,8 +226,13 @@ const PlanProcessBar = styled.div<{
 
 const Plan = () => {
   const { setAlarm } = useAlarm();
+
   const [update] = useAtom(updateState);
-  const [, setOpenSetting] = useAtom(isPlanPopupOpenState);
+
+  const [, setPlanPopupType] = useAtom(planPopupTypeState);
+  //
+  const [, setOpenPlanSetting] = useAtom(isPlanPopupOpenState);
+
   const [order] = useAtom(orderState);
   const [containerUpdate, setContainerUpdate] = useAtom(containerUpdateState);
   const [plan, getPlan] = useState<any[]>([]);
@@ -295,6 +301,7 @@ const Plan = () => {
           value={search}
           onKeyDown={(e) => handleKeySearch(e)}
           onChange={(e) => handleSearch(e)}
+          maxLength={14}
         />
         <SearchButton onClick={searching}>
           <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
@@ -347,7 +354,14 @@ const Plan = () => {
               </PlanButton>
             );
           })}
-        <AddPlanButton onClick={() => setOpenSetting(true)}>+</AddPlanButton>
+        <AddPlanButton
+          onClick={() => {
+            setOpenPlanSetting(true);
+            setPlanPopupType("insert");
+          }}
+        >
+          +
+        </AddPlanButton>
       </PlanDiv>
       {detail !== undefined && <PlanContainer />}
     </PlanSection>

@@ -6,15 +6,15 @@ import { useAtom } from "jotai";
 import styled from "styled-components";
 import { useEffect, useState } from "react";
 import { viewDetail } from "./components/common/ViewDetail";
-import { loadPlan } from "./components/plan/tools/LoadPlan";
+import { loadPlan } from "./components/plan/tools/common/LoadPlan";
 import {
   containerUpdateState,
   detailState,
   updateState,
 } from "@/atoms/plan_popup/PlanPopupState";
 import PlanContainer from "./components/plan/container/PlanContainer";
-import { planComplete } from "./components/plan/tools/PlanComplete";
-import { searchPlan } from "./components/plan/tools/SearchPlan";
+import { planComplete } from "./components/plan/tools/common/PlanComplete";
+import { searchPlan } from "./components/plan/tools/search/SearchPlan";
 
 const MainSection = styled.header`
   position: relative;

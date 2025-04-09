@@ -13,6 +13,7 @@ export async function POST(req: Request) {
         title: planData.title,
         planType: planData.planType,
         deadline: new Date(planData.deadline),
+        startTime: planData.startTime,
         ETC: planData.ETC,
         difficulty: Number(planData.difficulty),
         penalty: planData.penalty,

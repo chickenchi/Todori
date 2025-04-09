@@ -6,6 +6,8 @@ import { AlarmProvider } from "./tools/alarmFunction/AlarmProvider";
 import { AlarmManager } from "./tools/alarmFunction/AlarmManager";
 import { WaitProvider } from "./tools/waitFunction/WaitProvider";
 import Waiting from "./tools/waitFunction/Waiting";
+import { AlertProvider } from "./tools/alertFunction/AlertProvider";
+import { AlertManager } from "./tools/alertFunction/AlertManager";
 
 export const metadata: Metadata = {
   title: "토도리",
@@ -22,10 +24,13 @@ export default function RootLayout({
       <body cz-shortcut-listen="true">
         <WaitProvider>
           <Waiting />
-          <AlarmProvider>
-            <Header />
-            {children}
-          </AlarmProvider>
+          <AlertProvider>
+            <AlarmProvider>
+              <AlertManager />
+              <Header />
+              {children}
+            </AlarmProvider>
+          </AlertProvider>
         </WaitProvider>
       </body>
     </html>

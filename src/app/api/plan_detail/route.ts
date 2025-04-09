@@ -19,6 +19,7 @@ export async function GET(req: Request) {
         title: true,
         planType: true,
         deadline: true,
+        startTime: true,
         ETC: true,
         difficulty: true,
         penalty: true,
