@@ -25,6 +25,7 @@ export const detailState = atom<
       difficulty: number;
       penalty: string;
       reward: string;
+      started: boolean;
       completed: boolean;
       descType: string;
       plandescription: [
@@ -53,7 +54,9 @@ export const planTitleState = atom<string>("");
 export const planTypeState = atom<string>("procedure");
 export const planTargetState = atom<string>("routine");
 export const planDeadlineState = atom<string>("");
+
 export const planStartTimeState = atom<string>("");
+export const planImmediateStartState = atom<boolean>(false);
 
 export const planProceduresState = atom<string[]>([""]);
 export const planSuppliesState = atom<Set<Record<string, number>>>(

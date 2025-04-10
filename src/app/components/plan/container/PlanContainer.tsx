@@ -33,6 +33,8 @@ import { removePlan } from "../tools/plan_container/RemovePlan";
 import { partialUpdatePlan } from "../tools/plan_container/PartialUpdatePlan";
 import { useAlarm } from "@/app/tools/alarmFunction/AlarmProvider";
 import { useAlert } from "@/app/tools/alertFunction/AlertProvider";
+import { togglePlan } from "../tools/plan_container/TogglePlan";
+import dayjs from "dayjs";
 
 const ResizableDiv = styled(ResizableBox)`
   position: absolute;
@@ -220,6 +222,8 @@ const formatDateTime = (deadline: string) => {
     ? format(deadlineDate, "HH:mm") // 같은 날이면 시간만 표시
     : format(deadlineDate, "yyyy-MM-dd"); // 다르면 날짜 표시
 };
+
+const StartPlanButton = styled.button``;
 
 export default function PlanContainer() {
   const { setAlarm } = useAlarm();
@@ -417,7 +421,50 @@ export default function PlanContainer() {
     }
   };
 
-  const renderDescription = (detail: any) => {
+  const togglingPlan = async () => {
+    // 시작 시 늦었는지 판단과 중단 시 재시작 시간도 설정해야 함
+
+    let planData = {
+      pid: detail.pid,
+      started: !detail.started,
+    };
+
+    if (!detail.started) {
+      let currentDateTime =
+        dayjs().format("YYYY-MM-DD") + "T" + dayjs().format("HH:mm:ss");
+      let estimatedDateTime = detail.startTime.split(".")[0];
+
+      if (currentDateTime > detail.startTime) {
+        setAlarm("warning", "지각했기에 패널티를 부여합니다.");
+      }
+
+      alert([currentDateTime, estimatedDateTime]);
+
+      planData = {
+        pid: detail.pid,
+        started: !detail.started,
+      };
+    } else {
+      const result = await showAlert({
+        title: "토도리",
+        description: `중단 시 패널티가 있습니다!
+계속하시겠습니까?`,
+      });
+
+      if (!result) return;
+
+      planData = {
+        pid: detail.pid,
+        started: !detail.started,
+      };
+    }
+
+    await togglePlan(planData);
+    setContainerUpdate(detail.pid);
+    setUpdate(!update);
+  };
+
+  const RenderDescription = (detail: any) => {
     switch (detail.descType) {
       case "procedure":
         const firstUncompletedDesc = detail.plandescription.find(
@@ -563,7 +610,7 @@ export default function PlanContainer() {
         <DetailEdit onClick={() => editPlan()} />
       </DetailHeader>
 
-      <DescriptionContainer>{renderDescription(detail)}</DescriptionContainer>
+      <DescriptionContainer>{RenderDescription(detail)}</DescriptionContainer>
 
       <TaskAttributesContainer>
         <TaskAttributesTitle>마감 기한</TaskAttributesTitle>
@@ -590,6 +637,10 @@ export default function PlanContainer() {
           <TaskAttributes>{detail.ETC}</TaskAttributes>
         </TaskAttributesContainer>
       )}
+
+      <StartPlanButton onClick={() => togglingPlan()}>
+        {!detail.started ? "수행 시작" : "수행 중단"}
+      </StartPlanButton>
     </ResizableDiv>
   );
 }

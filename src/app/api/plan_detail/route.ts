@@ -24,6 +24,7 @@ export async function GET(req: Request) {
         difficulty: true,
         penalty: true,
         reward: true,
+        started: true,
         completed: true,
         descType: true,
         

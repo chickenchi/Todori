@@ -21,6 +21,7 @@ import {
   planStartTimeState,
   planPopupTypeState,
   planIdState,
+  planImmediateStartState,
 } from "@/atoms/plan_popup/PlanPopupState";
 import { SelectItem } from "../select/SelectItem";
 import { targetProps, typeProps } from "../select/props/SelectProps";
@@ -139,7 +140,12 @@ export const PlanPopup = () => {
   const [planTitle, setPlanTitle] = useAtom(planTitleState);
   const [planType, setPlanType] = useAtom(planTypeState);
   const [planDeadline, setPlanDeadline] = useAtom(planDeadlineState);
+
   const [planStartTime, setPlanStartTime] = useAtom(planStartTimeState);
+  const [planImmediateStart, setPlanImmediateStart] = useAtom(
+    planImmediateStartState
+  );
+
   const [planTarget] = useAtom(planTargetState);
 
   // Part 2
@@ -164,12 +170,13 @@ export const PlanPopup = () => {
   const [planPenalty, setPlanPenalty] = useAtom(planPenaltyState);
   const [planReward, setPlanReward] = useAtom(planRewardState);
 
-  const planValues = {
+  const plan = {
     pid: planId,
     title: planTitle,
     type: planType,
     deadline: planDeadline,
     startTime: planStartTime,
+    immediateStart: planImmediateStart,
 
     target: planTarget,
 
@@ -193,11 +200,12 @@ export const PlanPopup = () => {
     reward: planReward,
   };
 
-  const setPlanValues = {
+  const setPlan = {
     title: setPlanTitle, // 제목, 유형과 마감 기한
     type: setPlanType,
     deadline: setPlanDeadline,
     startTime: setPlanStartTime,
+    immediateStart: setPlanImmediateStart,
 
     /* 계획 내용 */
     supplies: setPlanSupplies,
@@ -227,18 +235,19 @@ export const PlanPopup = () => {
     setter(event.target.value as T); // 입력 값을 setter에 맞는 타입으로 변환
   };
 
+  const handleImmediateChange = () => {
+    setPlan.immediateStart(!plan.immediateStart);
+  };
+
   const applyRange = () => {
     let wrongMessage: string = "";
 
-    if (
-      isNaN(parseInt(planValues.range1)) ||
-      isNaN(parseInt(planValues.range2))
-    ) {
+    if (isNaN(parseInt(plan.range1)) || isNaN(parseInt(plan.range2))) {
       wrongMessage = "숫자만 입력해 주시기 바랍니다.";
     } else if (
-      parseInt(planValues.range1) > parseInt(planValues.range2) ||
-      parseInt(planValues.range1) < -2147483648 ||
-      parseInt(planValues.range2) > 2147483647
+      parseInt(plan.range1) > parseInt(plan.range2) ||
+      parseInt(plan.range1) < -2147483648 ||
+      parseInt(plan.range2) > 2147483647
     ) {
       wrongMessage = `범위 혹은 값의 설정이 잘못됐습니다.`;
     }
@@ -246,7 +255,7 @@ export const PlanPopup = () => {
     if (wrongMessage) {
       setAlarm("warning", wrongMessage);
     } else {
-      setPlanValues.ranges(`${planValues.range1}~${planValues.range2}`);
+      setPlan.ranges(`${plan.range1}~${plan.range2}`);
     }
   };
 
@@ -254,9 +263,9 @@ export const PlanPopup = () => {
     let wrongMessage: string = "";
 
     if (order === 3) {
-      switch (planValues.type) {
+      switch (plan.type) {
         case "procedure":
-          const hasEmpty = planValues.procedures.some(
+          const hasEmpty = plan.procedures.some(
             (item) => item === "" || item === null || item === undefined
           );
 
@@ -264,15 +273,15 @@ export const PlanPopup = () => {
 
           break;
         case "supplies":
-          if (planValues.supplies.size === 0)
+          if (plan.supplies.size === 0)
             wrongMessage = "준비물이 설정돼 있지 않습니다.";
           break;
         case "range":
-          if (!planValues.ranges) wrongMessage = "범위 적용이 되지 않았습니다.";
+          if (!plan.ranges) wrongMessage = "범위 적용이 되지 않았습니다.";
 
           break;
         case "text":
-          if (planValues.text === "") wrongMessage = "입력해 주세요!";
+          if (plan.text === "") wrongMessage = "입력해 주세요!";
 
           break;
       }
@@ -301,37 +310,83 @@ export const PlanPopup = () => {
     );
   };
 
+  const confirmDifficulty = async () => {
+    const confirmed = await showAlert({
+      title: "토도리",
+      description: `난이도 미설정 시 이에 대한 추가 점수를 획득하지 못합니다.\n계속하시겠습니까?`,
+    });
+
+    if (confirmed) {
+      setPlanOrder(4);
+      return false;
+    }
+  };
+
   const checkPlan = async () => {
     let problemMessage: string = "";
 
     let currentDay = dayjs().format("YYYY-MM-DD");
-    let currentTime = dayjs().format("HH:mm:ss");
+    let currentTime = dayjs().format("HH:mm");
 
-    let setDay = planValues.deadline.split("T")[0];
-    let setTime = planValues.deadline.split("T")[1];
+    // deadline
 
-    const date = new Date(planValues.deadline);
+    let setDay = plan.deadline.split("T")[0];
+    let setTime: string = plan.deadline.split("T")[1];
+
+    const date = new Date(plan.deadline);
     date.setMinutes(date.getMinutes() - 5);
     let setPossibleTime = date.toLocaleString().split(" ")[4];
 
-    if (planValues.title === "") {
-      problemMessage = "제목을 입력해 주세요!";
-    } else if (planValues.deadline === "") {
-      problemMessage = "마감 기한을 설정해 주세요!";
-    } else if (currentDay > setDay) {
-      problemMessage = "과거에서 오셨군요 ㅎㅅㅎ";
-    } else if (currentDay === setDay && currentTime > setTime) {
-      problemMessage = "시간이 뭔가 잘못된 거 같아요!";
-    } else if (currentDay === setDay && currentTime > setPossibleTime) {
-      problemMessage = "너무 빨라요! 5분 이후로 설정해 주세요!";
-    } else if (!planValues.startTime) {
-      problemMessage = "계획은 항상 시작하는 날을 정해야 해요!";
-    } else if (
-      planValues.startTime.split(":")[0].length != 2 ||
-      planValues.startTime.split(":")[1].length != 2
-    ) {
-      problemMessage = `시간은 XX:XX의 형태로만 구성돼요!
-[24시 기준]`;
+    // startTime
+
+    let setStartDay = plan.startTime.split("T")[0];
+    let setStartTime = plan.startTime.split("T")[1];
+
+    // title
+    switch (true) {
+      case plan.title === "":
+        problemMessage = "제목을 입력해 주세요!";
+        break;
+
+      // deadline
+      case plan.deadline === "":
+        problemMessage = "마감 기한을 설정해 주세요!";
+        break;
+      case currentDay > setDay:
+        problemMessage = "과거에서 오셨군요 ㅎㅅㅎ";
+        break;
+      case currentDay === setDay && currentTime > setTime:
+        problemMessage = "시간이 뭔가 잘못된 거 같아요!";
+        break;
+      case currentDay === setDay && currentTime > setPossibleTime:
+        problemMessage = "너무 빨라요! 5분 이후로 설정해 주세요!";
+        break;
+    }
+
+    if (!plan.immediateStart) {
+      switch (true) {
+        // startTime
+        case plan.startTime === "":
+          problemMessage = "시작 시간을 정해야 계획이 완벽해져요!";
+          break;
+        // 시작 날짜를 과거로 했는지 / 시작 날짜가 마감 날짜보다 미래로 했는지
+        case currentDay > setStartDay || setStartDay > setDay:
+          problemMessage = "어떻게 시작하시려고요?";
+          break;
+        /*
+       1. 현재 날짜와 시작 날짜가 같을 때
+        -> 현재 시간과 시작 시간과 동일 혹은
+          시작 시간을 과거로 했는지
+       2. 마감 날짜와 시작 날짜가 같을 때
+        -> 마감 시간과 시작 날짜와 동일 혹은
+          시작 날짜를 마감 날짜보다 미래로 했는지 */
+        case (currentDay === setStartDay && currentTime >= setStartTime) ||
+          (setDay === setStartDay && setTime <= setStartTime):
+          problemMessage = "시작 시간이 뭔가 잘못된 거 같아요!";
+          break;
+      }
+    } else {
+      setPlan.startTime(currentDay + "T" + currentTime);
     }
 
     if (problemMessage) {
@@ -339,17 +394,6 @@ export const PlanPopup = () => {
       setNextButtonText("다음");
       setAlarm("warning", problemMessage);
       return false;
-    } else if (planValues.difficulty === undefined) {
-      const confirmed = await showAlert({
-        title: "토도리",
-        description: `난이도 미설정 시 이에 대한 추가 점수를 획득하지 못합니다.\n계속하시겠습니까?`,
-      });
-
-      if (!confirmed) {
-        setPlanOrder(3);
-        setNextButtonText("다음");
-        return false;
-      }
     }
 
     return true;
@@ -373,23 +417,29 @@ export const PlanPopup = () => {
       reward: string;
       descType: string;
       pid?: number | null;
+      started?: boolean;
     } = {
-      title: planValues.title,
-      planType: planValues.target,
-      deadline: planValues.deadline,
-      startTime: planValues.startTime,
-      ETC: planValues.etc,
-      difficulty: planValues.difficulty,
-      penalty: planValues.penalty,
-      reward: planValues.reward,
-      descType: planValues.type,
+      title: plan.title,
+      planType: plan.target,
+      deadline: plan.deadline,
+      startTime: plan.startTime,
+      ETC: plan.etc,
+      difficulty: plan.difficulty,
+      penalty: plan.penalty,
+      reward: plan.reward,
+      descType: plan.type,
+      started: false,
     };
 
     let pid;
 
-    if (planValues.pid != null) {
-      planData.pid = planValues.pid;
+    if (plan.pid != null) {
+      planData.pid = plan.pid;
       pid = planData.pid;
+    }
+
+    if (plan.immediateStart === true) {
+      planData.started = true;
     }
 
     if (planPopupType === "insert") {
@@ -422,9 +472,9 @@ export const PlanPopup = () => {
 
     if (planPopupType !== "insert") await clearPlanDescription(planData);
 
-    switch (planValues.type) {
+    switch (plan.type) {
       case "procedure":
-        const procedures = planValues.procedures;
+        const procedures = plan.procedures;
 
         for (let i = 0; i < procedures.length; i++) {
           const planDescData = {
@@ -451,7 +501,7 @@ export const PlanPopup = () => {
 
         return;
       case "supplies":
-        const supplies = Array.from(planValues.supplies);
+        const supplies = Array.from(plan.supplies);
 
         for (let i = 0; i < supplies.length; i++) {
           const [key, value] = Object.entries(supplies[i])[0];
@@ -483,9 +533,8 @@ export const PlanPopup = () => {
       default:
         planDescData = {
           pid: pid,
-          descType: planValues.type,
-          description:
-            planValues.type === "text" ? planValues.text : planValues.ranges,
+          descType: plan.type,
+          description: plan.type === "text" ? plan.text : plan.ranges,
         };
         break;
     }
@@ -514,9 +563,9 @@ export const PlanPopup = () => {
           <>
             <InputText
               type="text"
-              value={planValues.title}
+              value={plan.title}
               placeholder="제목"
-              onChange={(event) => handleTextChange(event, setPlanValues.title)}
+              onChange={(event) => handleTextChange(event, setPlan.title)}
             />
             <SelectItemContainer>
               <SelectItem elements={typeProps} selectState={planTypeState} />
@@ -525,68 +574,71 @@ export const PlanPopup = () => {
                 selectState={planTargetState}
               />
             </SelectItemContainer>
+            {!plan.immediateStart && (
+              <>
+                시작 예정 시간
+                <InputText
+                  type="datetime-local"
+                  value={plan.startTime}
+                  placeholder="시작 예정 시간"
+                  onChange={(event) =>
+                    handleTextChange(event, setPlan.startTime)
+                  }
+                />
+              </>
+            )}
+            <>작성 후 즉시 시작</>
+            <InputText
+              type="checkbox"
+              onChange={() => handleImmediateChange()}
+              checked={plan.immediateStart}
+            />
+            마감 기한
             <InputText
               type="datetime-local"
-              value={planValues.deadline}
+              value={plan.deadline}
               placeholder="마감 기한"
-              onChange={(event) =>
-                handleTextChange(event, setPlanValues.deadline)
-              }
-            />
-            <InputText
-              type="text"
-              value={planValues.startTime}
-              placeholder="시작 예정 시간[exㅣ23:15]"
-              onChange={(event) =>
-                handleTextChange(event, setPlanValues.startTime)
-              }
+              onChange={(event) => handleTextChange(event, setPlan.deadline)}
             />
           </>
         );
       case 2:
-        switch (planValues.type) {
+        switch (plan.type) {
           case "procedure":
             return (
               <>
                 <InputDescription>
                   {`
-                ${planValues.procedureNumber + 1}/${
-                    planValues.procedures.length
-                  }
+                ${plan.procedureNumber + 1}/${plan.procedures.length}
                 `}
                 </InputDescription>
                 <InputText
                   type="text"
-                  value={planValues.procedures[planValues.procedureNumber]}
+                  value={plan.procedures[plan.procedureNumber]}
                   placeholder="내용 입력"
                   onChange={(event) =>
                     editProcedure(
                       event.target.value,
-                      planValues.procedures,
-                      setPlanValues.procedures,
-                      planValues.procedureNumber
+                      plan.procedures,
+                      setPlan.procedures,
+                      plan.procedureNumber
                     )
                   }
                 />
                 <InsertButtonContainer>
-                  {planValues.procedureNumber !== 0 && (
+                  {plan.procedureNumber !== 0 && (
                     <InsertButton
                       onClick={() =>
-                        setPlanValues.procedureNumber(
-                          planValues.procedureNumber - 1
-                        )
+                        setPlan.procedureNumber(plan.procedureNumber - 1)
                       }
                     >
                       이전 절차
                     </InsertButton>
                   )}
-                  {planValues.procedures.length - 1 !==
-                  planValues.procedureNumber ? (
+                  {plan.procedures.length - 1 !== plan.procedureNumber ? (
                     <InsertButton
                       onClick={() =>
-                        setPlanValues.procedureNumber(
-                          planValues.procedureNumber + 1
-                        )
+                        setPlan.procedureNumber(plan.procedureNumber + 1)
                       }
                     >
                       다음 절차
@@ -594,33 +646,23 @@ export const PlanPopup = () => {
                   ) : (
                     <InsertButton
                       onClick={() => {
-                        insertProcedure(
-                          planValues.procedures,
-                          setPlanValues.procedures
-                        );
-                        setPlanValues.procedureNumber(
-                          planValues.procedureNumber + 1
-                        );
+                        insertProcedure(plan.procedures, setPlan.procedures);
+                        setPlan.procedureNumber(plan.procedureNumber + 1);
                       }}
                     >
                       절차 추가
                     </InsertButton>
                   )}
-                  {planValues.procedures.length !== 1 && (
+                  {plan.procedures.length !== 1 && (
                     <InsertButton
                       onClick={() => {
                         removeProcedure(
-                          planValues.procedures,
-                          setPlanValues.procedures,
-                          planValues.procedureNumber
+                          plan.procedures,
+                          setPlan.procedures,
+                          plan.procedureNumber
                         );
-                        if (
-                          planValues.procedures.length - 1 ===
-                          planValues.procedureNumber
-                        )
-                          setPlanValues.procedureNumber(
-                            planValues.procedureNumber - 1
-                          );
+                        if (plan.procedures.length - 1 === plan.procedureNumber)
+                          setPlan.procedureNumber(plan.procedureNumber - 1);
                       }}
                     >
                       절차 삭제
@@ -632,13 +674,11 @@ export const PlanPopup = () => {
           case "supplies":
             return (
               <>
-                {Array.from(planValues.supplies).map((item, index) => (
+                {Array.from(plan.supplies).map((item, index) => (
                   <div key={index}>
                     {Object.entries(item).map(([key, value]) => (
                       <Supply
-                        onClick={() =>
-                          removeSupply(key, setPlanValues.supplies)
-                        }
+                        onClick={() => removeSupply(key, setPlan.supplies)}
                       >{`${key}(${value})`}</Supply>
                     ))}
                   </div>
@@ -646,28 +686,26 @@ export const PlanPopup = () => {
 
                 <InputText
                   type="text"
-                  value={planValues.supply}
+                  value={plan.supply}
                   placeholder="필요 물품 입력"
-                  onChange={(event) =>
-                    handleTextChange(event, setPlanValues.supply)
-                  }
+                  onChange={(event) => handleTextChange(event, setPlan.supply)}
                 />
                 <InputText
                   type="text"
-                  value={planValues.supplyCount}
+                  value={plan.supplyCount}
                   placeholder="개수 입력(1개면 생략)"
                   onChange={(event) =>
-                    handleTextChange(event, setPlanValues.supplyCount)
+                    handleTextChange(event, setPlan.supplyCount)
                   }
                 />
                 <InsertButton
                   onClick={() => {
-                    if (planValues.supply)
+                    if (plan.supply)
                       insertSupply(
-                        planValues.supply,
-                        planValues.supplyCount,
-                        planValues.supplies,
-                        setPlanValues.supplies
+                        plan.supply,
+                        plan.supplyCount,
+                        plan.supplies,
+                        setPlan.supplies
                       );
                   }}
                 >
@@ -678,21 +716,17 @@ export const PlanPopup = () => {
           case "range":
             return (
               <>
-                <InputDescription>{planValues.ranges}</InputDescription>
+                <InputDescription>{plan.ranges}</InputDescription>
                 <InputText
                   type="text"
-                  value={planValues.range1}
-                  onChange={(event) =>
-                    handleTextChange(event, setPlanValues.range1)
-                  }
+                  value={plan.range1}
+                  onChange={(event) => handleTextChange(event, setPlan.range1)}
                 />
                 <>~</>
                 <InputText
                   type="text"
-                  value={planValues.range2}
-                  onChange={(event) =>
-                    handleTextChange(event, setPlanValues.range2)
-                  }
+                  value={plan.range2}
+                  onChange={(event) => handleTextChange(event, setPlan.range2)}
                 />
                 <InsertButton
                   onClick={() => {
@@ -708,10 +742,8 @@ export const PlanPopup = () => {
               <>
                 <InputText
                   type="text"
-                  value={planValues.text}
-                  onChange={(event) =>
-                    handleTextChange(event, setPlanValues.text)
-                  }
+                  value={plan.text}
+                  onChange={(event) => handleTextChange(event, setPlan.text)}
                 />
               </>
             );
@@ -725,8 +757,8 @@ export const PlanPopup = () => {
             <InputText
               type="text"
               placeholder="작업 시간[n일 m시간 o분(초 불가)]"
-              value={planValues.etc}
-              onChange={(event) => handleTextChange(event, setPlanValues.etc)}
+              value={plan.etc}
+              onChange={(event) => handleTextChange(event, setPlan.etc)}
             />
             <OptionContainer>
               {[1, 2, 3, 4, 5].map((difficulty) => (
@@ -735,9 +767,9 @@ export const PlanPopup = () => {
                     type="radio"
                     name="difficulty"
                     value={difficulty}
-                    checked={planValues.difficulty == difficulty}
+                    checked={plan.difficulty == difficulty}
                     onChange={(event) =>
-                      handleTextChange(event, setPlanValues.difficulty)
+                      handleTextChange(event, setPlan.difficulty)
                     }
                   />
                   <InputDescription>{difficulty}</InputDescription>
@@ -752,19 +784,15 @@ export const PlanPopup = () => {
           <>
             <InputText
               type="text"
-              value={planValues.penalty}
+              value={plan.penalty}
               placeholder="벌칙"
-              onChange={(event) =>
-                handleTextChange(event, setPlanValues.penalty)
-              }
+              onChange={(event) => handleTextChange(event, setPlan.penalty)}
             />
             <InputText
               type="text"
-              value={planValues.reward}
+              value={plan.reward}
               placeholder="보상"
-              onChange={(event) =>
-                handleTextChange(event, setPlanValues.reward)
-              }
+              onChange={(event) => handleTextChange(event, setPlan.reward)}
             />
           </>
         );
@@ -781,9 +809,7 @@ export const PlanPopup = () => {
       <GlobalStyle />
       <AlarmManager />
 
-      <Title>
-        {planOrder > 1 && planValues.title ? planValues.title : "계획 설정"}
-      </Title>
+      <Title>{planOrder > 1 && plan.title ? plan.title : "계획 설정"}</Title>
 
       {planScreen()}
 
@@ -795,7 +821,9 @@ export const PlanPopup = () => {
         )}
         <NextButton
           onClick={() =>
-            planOrder < 4
+            planOrder === 3 && !plan.difficulty
+              ? confirmDifficulty()
+              : planOrder < 4
               ? handlePlanOrderChange(planOrder + 1)
               : planPopupType === "insert" || planPopupType === "edit"
               ? insertOrEditPlan()
