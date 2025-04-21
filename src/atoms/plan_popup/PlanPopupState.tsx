@@ -1,4 +1,8 @@
-import { targetProps } from "@/app/components/select/props/SelectProps";
+import {
+  periodicityProps,
+  targetProps,
+  typeProps,
+} from "@/app/components/select/props/SelectProps";
 import { atom } from "jotai";
 
 export const isPlanPopupOpenState = atom<boolean>(false);
@@ -51,8 +55,9 @@ export const detailState = atom<
 export const planOrderState = atom<number>(1);
 
 export const planTitleState = atom<string>("");
-export const planTypeState = atom<string>("procedure");
-export const planTargetState = atom<string>("routine");
+export const planTypeState = atom<keyof typeof typeProps>("procedure");
+export const planPeriodicityState = atom<keyof typeof periodicityProps>("week");
+export const planTargetState = atom<keyof typeof targetProps>("routine");
 export const planDeadlineState = atom<string>("");
 
 export const planStartTimeState = atom<string>("");

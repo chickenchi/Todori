@@ -57,7 +57,7 @@ const HorizontalLine = styled.div`
 
   background-color: black;
   width: 100%;
-  height: 2px;
+  height: 1px;
 `;
 
 const Header = () => {

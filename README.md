@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 주기
 
-## Getting Started
+> 요일제
 
-First, run the development server:
+> 격으로 하는 제도(alternate)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+> ~에 n번(interval)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+> 연관 계획
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+# 요일제
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+> '월화수목금토일'을 선택하는 구조
 
-## Learn More
+- 'MonWedSun'과 같이 문자열 처리
+  - 계획 데이터를 불러올 때 검토하면 된다
 
-To learn more about Next.js, take a look at the following resources:
+# 격으로 하는 제도(alternate)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. 하루를 365/366일로 지정해서 현재가 며칠인지 구한다.
+2. 홀수날이라면 홀수날만 계속, 짝수날이면 짝수날만 계속하도록 한다.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- 휴일 건너뛰는 기능 없음 ㅉㅉㅉㅉ...이 아니라 휴일이면 건너뛸지 선택하는 기능을 넣는다.
 
-## Deploy on Vercel
+# (범위)에 n번(interval)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. 지정 날짜부터 시행할지 오늘부터 시행할지를 고른다.
+2. n번을 아무데나 할지 날짜를 정해서 할지도 고른다.
+3. 선택된 날짜를 기준으로 범위 안에 계획을 완료해야 하며 완료 후에 n번 수행이 이미 완료된 경우 계획을 완료 상태로 두고 띄우지 않는다.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# 연관 계획
+
+> 계획이 끝나면 다른 계획으로 넘어가는 연관 계획은 FE 단에서 해결

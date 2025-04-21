@@ -599,10 +599,7 @@ export default function PlanContainer() {
       <DetailHeader>
         <DetailChecked
           completed={`${detail.completed}`}
-          onClick={() =>
-            (detail.descType === "text" || detail.descType === "range") &&
-            checkingDetail(detail.pid, detail.completed)
-          }
+          onClick={() => checkingDetail(detail.pid, detail.completed)}
         />
         <DetailTitle>{detail.title}</DetailTitle>
         <DetailExit onClick={() => setDetail(undefined)}>X</DetailExit>

@@ -40,8 +40,15 @@ model plandescription {
 
 enum plan_planType {
   routine
+  periodic
   project
   common
+}
+
+enum plan_periodicType {
+  week
+  interval
+  alternate
 }
 
 enum plandescription_descType {
