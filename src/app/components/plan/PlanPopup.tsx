@@ -190,7 +190,7 @@ export const PlanPopup = () => {
     planImmediateStartState
   );
 
-  const [planTarget] = useAtom(planTargetState);
+  const [planTarget, setPlanTarget] = useAtom(planTargetState);
   const [planPeriodicity] = useAtom(planPeriodicityState);
 
   // Part 2
@@ -254,6 +254,8 @@ export const PlanPopup = () => {
     deadline: setPlanDeadline,
     startTime: setPlanStartTime,
     immediateStart: setPlanImmediateStart,
+
+    target: setPlanTarget,
 
     /* 계획 내용 */
     supplies: setPlanSupplies,
@@ -370,11 +372,14 @@ export const PlanPopup = () => {
     }
   };
 
+  let currentDay = dayjs().format("YYYY-MM-DD");
+  let currentTime = dayjs().format("HH:mm");
+
   const checkPlan = async () => {
     let problemMessage: string = "";
 
-    let currentDay = dayjs().format("YYYY-MM-DD");
-    let currentTime = dayjs().format("HH:mm");
+    currentDay = dayjs().format("YYYY-MM-DD");
+    currentTime = dayjs().format("HH:mm");
 
     // deadline
 
@@ -394,6 +399,8 @@ export const PlanPopup = () => {
 
     switch (true) {
       // deadline
+      case !plan.deadline:
+        break;
       case currentDay > setDay:
         problemMessage = "과거에서 오셨군요 ㅎㅅㅎ";
         moveOrder = 4;
@@ -447,7 +454,7 @@ export const PlanPopup = () => {
     const planData: {
       title: string;
       planType: string;
-      deadline: string;
+      deadline?: string;
       startTime: string;
       ETC: string;
       difficulty?: number;
@@ -456,11 +463,16 @@ export const PlanPopup = () => {
       descType: string;
       pid?: number | null;
       started?: boolean;
+      periodicType?: string;
+      days?: string;
+      interval?: string;
+      alternative?: string;
     } = {
       title: plan.title,
       planType: plan.target,
-      deadline: plan.deadline,
-      startTime: plan.startTime,
+      startTime: plan.immediateStart
+        ? currentDay + "T" + currentTime
+        : plan.startTime,
       ETC: plan.etc,
       difficulty: plan.difficulty,
       penalty: plan.penalty,
@@ -476,8 +488,29 @@ export const PlanPopup = () => {
       pid = planData.pid;
     }
 
+    if (plan.deadline) {
+      alert("?");
+      planData.deadline = plan.deadline;
+    }
+
     if (plan.immediateStart === true) {
       planData.started = true;
+    }
+
+    if (plan.target === "periodicity") {
+      planData.periodicType = plan.periodicity;
+
+      switch (plan.periodicity) {
+        case "week":
+          planData.days = checkedDays.toString();
+          break;
+        case "interval":
+          planData.interval = selectedInterval;
+          break;
+        case "alternate":
+          planData.alternative = summaryText;
+          break;
+      }
     }
 
     if (planPopupType === "insert") {
@@ -604,10 +637,14 @@ export const PlanPopup = () => {
 
         break;
       case 4:
-        if (!plan.deadline) {
-          setAlarm("warning", "마감 기한을 입력해 주세요!");
+        if (
+          !plan.deadline &&
+          plan.target !== "periodicity" &&
+          plan.target !== "routine"
+        ) {
+          setAlarm("warning", "주기적이지 않은 계획은 마감 기한이 필수예요!");
           return;
-        } else if (!plan.startTime) {
+        } else if (!plan.startTime && !plan.immediateStart) {
           setAlarm("warning", "시작 시간을 정해야 계획이 완벽해져요!");
           return;
         }
@@ -810,17 +847,60 @@ export const PlanPopup = () => {
     }
   };
 
-  const periodicityType = () => {
-    const weekdays = {
-      Mon: "월",
-      Tue: "화",
-      Wed: "수",
-      Thu: "목",
-      Fri: "금",
-      Sat: "토",
-      Sun: "일",
-    };
+  // days
 
+  const [checkedDays, setCheckedDays] = useState<string[]>([]);
+
+  const handleCheckboxChange = (e: any) => {
+    const { value, checked } = e.target;
+    setCheckedDays((prev: any) =>
+      checked ? [...prev, value] : prev.filter((day: any) => day !== value)
+    );
+  };
+
+  const weekdays = {
+    Mon: "월",
+    Tue: "화",
+    Wed: "수",
+    Thu: "목",
+    Fri: "금",
+    Sat: "토",
+    Sun: "일",
+  };
+
+  const weekdayKeys = Object.keys(weekdays);
+
+  useEffect(() => {
+    if (checkedDays.length === weekdayKeys.length) {
+      setPlan.target("routine");
+      setCheckedDays([]);
+    }
+  }, [checkedDays]);
+
+  // interval
+
+  const [selectedInterval, setSelectedInterval] = useState("");
+
+  const handleIntervalChange = (e: any) => {
+    setSelectedInterval(e.target.value);
+  };
+
+  // alternative
+
+  type PeriodUnit = "d" | "w" | "m" | "y";
+  type CountRange = "lt" | "lte" | "gte" | "gt";
+
+  const [period, setPeriod] = useState<string>("");
+  const [periodUnit, setPeriodUnit] = useState<PeriodUnit>("d");
+  const [count, setCount] = useState<string>("");
+  const [countRange, setCountRange] = useState<CountRange>("lt");
+  const [summaryText, setSummaryText] = useState<string>("");
+
+  useEffect(() => {
+    setSummaryText(`${period}${periodUnit} ${count} ${countRange}`);
+  }, [period, periodUnit, count, countRange]);
+
+  const periodicityType = () => {
     const intervalList = {
       day: "격일제",
       week: "격주제",
@@ -832,12 +912,19 @@ export const PlanPopup = () => {
         return (
           <>
             <WeekContainer>
-              {Object.entries(weekdays).map(([key, label]) => (
-                <WeekdayContainer key={key}>
-                  <WeekText>{label}</WeekText>
-                  <Week type="checkbox" value={key} />
-                </WeekdayContainer>
-              ))}
+              {Object.entries(weekdays).map(
+                ([key, label]: [string, string]) => (
+                  <WeekdayContainer key={key}>
+                    <WeekText>{label}</WeekText>
+                    <Week
+                      type="checkbox"
+                      value={key}
+                      checked={checkedDays.includes(key)}
+                      onChange={handleCheckboxChange}
+                    />
+                  </WeekdayContainer>
+                )
+              )}
             </WeekContainer>
           </>
         );
@@ -848,7 +935,13 @@ export const PlanPopup = () => {
               {Object.entries(intervalList).map(([key, label]) => (
                 <IntervalContainer key={key}>
                   <IntervalText>{label}</IntervalText>
-                  <Interval type="radio" name="interval" value={key} />
+                  <Interval
+                    type="radio"
+                    name="interval"
+                    value={key}
+                    checked={selectedInterval === key}
+                    onChange={handleIntervalChange}
+                  />
                 </IntervalContainer>
               ))}
             </IntervalListContainer>
@@ -857,19 +950,36 @@ export const PlanPopup = () => {
       case "alternate":
         return (
           <AlternativeContainer>
-            <AlternativePeriodicity type="text" />
-            <AlternativePeriodicityDate>
-              <option value="">일</option>
-              <option value="">월</option>
-              <option value="">년</option>
+            <AlternativePeriodicity
+              type="text"
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+            />
+            <AlternativePeriodicityDate
+              as="select"
+              value={periodUnit}
+              onChange={(e) => setPeriodUnit(e.target.value as PeriodUnit)}
+            >
+              <option value="d">일</option>
+              <option value="w">주</option>
+              <option value="m">월</option>
+              <option value="y">년</option>
             </AlternativePeriodicityDate>
-            <AlternativeCount type="text" />
+            <AlternativeCount
+              type="text"
+              value={count}
+              onChange={(e) => setCount(e.target.value)}
+            />
             <AlternativeCountText>회</AlternativeCountText>
-            <AlternativeCountRange>
-              <option value="">미만</option>
-              <option value="">이하</option>
-              <option value="">이상</option>
-              <option value="">초과</option>
+            <AlternativeCountRange
+              as="select"
+              value={countRange}
+              onChange={(e) => setCountRange(e.target.value as CountRange)}
+            >
+              <option value="lt">미만</option>
+              <option value="lte">이하</option>
+              <option value="gte">이상</option>
+              <option value="gt">초과</option>
             </AlternativeCountRange>
           </AlternativeContainer>
         );
@@ -994,7 +1104,7 @@ export const PlanPopup = () => {
       <GlobalStyle />
       <AlarmManager />
 
-      <Title>{planOrder > 1 && plan.title ? plan.title : "계획 설정"}</Title>
+      <Title>{planOrder > 1 ? plan.title : "계획 설정"}</Title>
 
       {planScreen()}
 

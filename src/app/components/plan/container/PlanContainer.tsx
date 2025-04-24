@@ -609,10 +609,12 @@ export default function PlanContainer() {
 
       <DescriptionContainer>{RenderDescription(detail)}</DescriptionContainer>
 
-      <TaskAttributesContainer>
-        <TaskAttributesTitle>마감 기한</TaskAttributesTitle>
-        <TaskAttributes>~ {formatDateTime(detail.deadline)}</TaskAttributes>
-      </TaskAttributesContainer>
+      {detail.deadline && (
+        <TaskAttributesContainer>
+          <TaskAttributesTitle>마감 기한</TaskAttributesTitle>
+          <TaskAttributes>~ {formatDateTime(detail.deadline)}</TaskAttributes>
+        </TaskAttributesContainer>
+      )}
 
       {detail.difficulty && (
         <TaskAttributesContainer>

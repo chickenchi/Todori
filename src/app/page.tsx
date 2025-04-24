@@ -336,9 +336,11 @@ const Main = () => {
                     )}
                     <PlanTitle type={plan.descType}>{plan.title}</PlanTitle>
                   </PlanTitleContainer>
-                  <PlanDeadline>
-                    ~ {new Date(plan.deadline).toLocaleString()}
-                  </PlanDeadline>
+                  {plan.deadline && (
+                    <PlanDeadline>
+                      ~ {new Date(plan.deadline).toLocaleString()}
+                    </PlanDeadline>
+                  )}
                 </Plan>
               );
             })

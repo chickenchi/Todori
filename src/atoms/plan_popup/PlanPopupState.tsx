@@ -22,7 +22,7 @@ export const detailState = atom<
   | {
       pid: number;
       title: string;
-      planType: string;
+      planType: keyof typeof targetProps;
       deadline: string;
       startTime: string;
       ETC: string;
@@ -31,7 +31,7 @@ export const detailState = atom<
       reward: string;
       started: boolean;
       completed: boolean;
-      descType: string;
+      descType: keyof typeof typeProps;
       plandescription: [
         {
           pid: number;

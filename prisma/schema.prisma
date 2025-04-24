@@ -8,25 +8,25 @@ datasource db {
 }
 
 model plan {
-  pid        Int      @id @default(autoincrement())
-  title      String   @db.VarChar(100)
-  deadline   DateTime @db.DateTime(0)
-  startTime  DateTime @db.DateTime(0)
-  ETC        String?  @db.VarChar(5)
-  difficulty Int?
-  penalty    String?  @db.Text
-  reward     String?  @db.Text
-  started    Boolean
-  completed  Boolean
-  note       String?  @db.Text
+  pid       Int       @id @default(autoincrement())
+  title     String    @db.VarChar(100)
+  deadline  DateTime? @db.DateTime(0)
+  started   Boolean
+  startTime DateTime  @db.DateTime(0)
+  completed Boolean
 
-  days        String? @db.Text
-  interval    String? @db.Text
-  alternative String? @db.Text
+  ETC        String? @db.VarChar(5)
+  difficulty Int?
+  reward     String? @db.Text
+  penalty    String? @db.Text
+  note       String? @db.Text
 
   planType plan_planType
 
-  periodicType plan_periodicType
+  periodicType plan_periodicType?
+  days         String?            @db.Text
+  interval     String?            @db.Text
+  alternative  String?            @db.Text
 
   descType plandescription_descType
 
@@ -47,7 +47,7 @@ model plandescription {
 
 enum plan_planType {
   routine
-  periodic
+  periodicity
   project
   common
 }

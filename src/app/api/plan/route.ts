@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       data: {
         title: planData.title,
         planType: planData.planType,
-        deadline: new Date(planData.deadline),
+        ...(planData.deadline !== undefined && { deadline: new Date(planData.deadline) }),
         startTime: new Date(planData.startTime),
         ETC: planData.ETC,
         difficulty: Number(planData.difficulty),
@@ -21,6 +21,10 @@ export async function POST(req: Request) {
         descType: planData.descType,
         started: planData.started,
         completed: false,
+        ...(planData.periodicType && { periodicType: planData.periodicType }),
+        ...(planData.days && { days: planData.days }),
+        ...(planData.interval && { interval: planData.interval }),
+        ...(planData.alternative && { alternative: planData.alternative }),
       },
     });
 

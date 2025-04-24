@@ -328,9 +328,11 @@ const Plan = () => {
                 key={plan.pid}
               >
                 <PlanTitle>{plan.title}</PlanTitle>
-                <PlanDeadline>
-                  ~ {new Date(plan.deadline).toLocaleString()}
-                </PlanDeadline>
+                {plan.deadline && (
+                  <PlanDeadline>
+                    ~ {new Date(plan.deadline).toLocaleString()}
+                  </PlanDeadline>
+                )}
                 {plan.ETC && <PlanDuration>ETC l {plan.ETC}</PlanDuration>}
                 {plan.difficulty && (
                   <PlanDifficulty>
