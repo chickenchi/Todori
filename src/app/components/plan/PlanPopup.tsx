@@ -392,18 +392,8 @@ export const PlanPopup = () => {
 
     let moveOrder: number = 0;
 
-    // title
     switch (true) {
-      case plan.title === "":
-        problemMessage = "제목을 입력해 주세요!";
-        moveOrder = 1;
-        break;
-
       // deadline
-      case plan.deadline === "":
-        problemMessage = "마감 기한을 설정해 주세요!";
-        moveOrder = 4;
-        break;
       case currentDay > setDay:
         problemMessage = "과거에서 오셨군요 ㅎㅅㅎ";
         moveOrder = 4;
@@ -423,22 +413,11 @@ export const PlanPopup = () => {
         break;
       case !plan.immediateStart:
         switch (true) {
-          case plan.startTime === "":
-            problemMessage = "시작 시간을 정해야 계획이 완벽해져요!";
-            moveOrder = 4;
-            break;
-          // 시작 날짜를 과거로 했는지 / 시작 날짜가 마감 날짜보다 미래로 했는지
           case currentDay > setStartDay || setStartDay > setDay:
             problemMessage = "어떻게 시작하시려고요?";
             moveOrder = 4;
             break;
-          /*
-         1. 현재 날짜와 시작 날짜가 같을 때
-          -> 현재 시간과 시작 시간과 동일 혹은
-            시작 시간을 과거로 했는지
-         2. 마감 날짜와 시작 날짜가 같을 때
-          -> 마감 시간과 시작 날짜와 동일 혹은
-            시작 날짜를 마감 날짜보다 미래로 했는지 */
+
           case (currentDay === setStartDay && currentTime >= setStartTime) ||
             (setDay === setStartDay && setTime <= setStartTime):
             problemMessage = "시작 시간이 뭔가 잘못된 거 같아요!";
@@ -613,6 +592,43 @@ export const PlanPopup = () => {
     if (succeed) onPlanSettingSuccess();
 
     setWaiting(false);
+  };
+
+  const nextPage = () => {
+    switch (planOrder) {
+      case 1:
+        if (!plan.title) {
+          setAlarm("warning", "제목을 입력해 주세요!");
+          return;
+        }
+
+        break;
+      case 4:
+        if (!plan.deadline) {
+          setAlarm("warning", "마감 기한을 입력해 주세요!");
+          return;
+        } else if (!plan.startTime) {
+          setAlarm("warning", "시작 시간을 정해야 계획이 완벽해져요!");
+          return;
+        }
+
+        break;
+      case 5:
+        if (!plan.difficulty) {
+          confirmDifficulty();
+          return;
+        }
+
+        break;
+      case 6: // <
+        if (planPopupType === "insert" || planPopupType === "edit")
+          insertOrEditPlan();
+        else setAlarm("warning", "뭔가 잘못된 거 같아요!");
+
+        return;
+    }
+
+    handlePlanOrderChange(planOrder + 1);
   };
 
   const descType = () => {
@@ -925,7 +941,7 @@ export const PlanPopup = () => {
           <>
             <InputText
               type="text"
-              placeholder="작업 시간[n일 m시간 o분(초 불가)]"
+              placeholder="총 작업 시간(자유롭게 작성)"
               value={plan.etc}
               onChange={(event) => handleTextChange(event, setPlan.etc)}
             />
@@ -988,19 +1004,7 @@ export const PlanPopup = () => {
             이전
           </PreviousButton>
         )}
-        <NextButton
-          onClick={() =>
-            planOrder === 5 && !plan.difficulty
-              ? confirmDifficulty()
-              : planOrder < 6
-              ? handlePlanOrderChange(planOrder + 1)
-              : planPopupType === "insert" || planPopupType === "edit"
-              ? insertOrEditPlan()
-              : setAlarm("warning", "뭔가 잘못된 거 같아요!")
-          }
-        >
-          {nextButtonText}
-        </NextButton>
+        <NextButton onClick={() => nextPage()}>{nextButtonText}</NextButton>
       </ButtonContainer>
 
       <CloseButton onClick={() => setOpenSetting(false)}>나가기</CloseButton>

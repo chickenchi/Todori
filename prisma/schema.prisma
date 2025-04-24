@@ -8,18 +8,25 @@ datasource db {
 }
 
 model plan {
-  pid        Int           @id @default(autoincrement())
-  title      String        @db.VarChar(100)
-  planType   plan_planType
-  deadline   DateTime      @db.DateTime(0)
-  startTime  DateTime      @db.DateTime(0)
-  ETC        String?       @db.VarChar(5)
+  pid        Int      @id @default(autoincrement())
+  title      String   @db.VarChar(100)
+  deadline   DateTime @db.DateTime(0)
+  startTime  DateTime @db.DateTime(0)
+  ETC        String?  @db.VarChar(5)
   difficulty Int?
-  penalty    String?       @db.Text
-  reward     String?       @db.Text
+  penalty    String?  @db.Text
+  reward     String?  @db.Text
   started    Boolean
   completed  Boolean
-  note       String?       @db.Text
+  note       String?  @db.Text
+
+  days        String? @db.Text
+  interval    String? @db.Text
+  alternative String? @db.Text
+
+  planType plan_planType
+
+  periodicType plan_periodicType
 
   descType plandescription_descType
 
